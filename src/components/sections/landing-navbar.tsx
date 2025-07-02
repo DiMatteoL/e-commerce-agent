@@ -1,6 +1,7 @@
 "use client";
 
 import { Icons } from "@/components/icons";
+import { NavMenu } from "@/components/nav-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
@@ -49,7 +50,7 @@ const drawerMenuVariants = {
   visible: { opacity: 1 },
 };
 
-export function Navbar() {
+export function LandingNavbar() {
   const { scrollY } = useScroll();
   const [hasScrolled, setHasScrolled] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -115,13 +116,15 @@ export function Navbar() {
               <p className="text-primary text-lg font-semibold">SkyAgent</p>
             </Link>
 
+            <NavMenu />
+
             <div className="flex shrink-0 flex-row items-center gap-1 md:gap-3">
               <div className="flex items-center space-x-6">
                 <Link
                   className="bg-secondary text-primary-foreground dark:text-secondary-foreground hidden h-8 w-fit items-center justify-center rounded-full border border-white/[0.12] px-4 text-sm font-normal tracking-wide shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] md:flex"
-                  href="/"
+                  href="/api/auth/signin?callbackUrl=/app"
                 >
-                  Sign Out
+                  Try for free
                 </Link>
               </div>
               <ThemeToggle />
@@ -178,13 +181,47 @@ export function Navbar() {
                   </button>
                 </div>
 
+                <motion.ul
+                  className="border-border mb-4 flex flex-col rounded-md border text-sm"
+                  variants={drawerMenuContainerVariants}
+                >
+                  <AnimatePresence>
+                    {siteConfig.nav.links.map((item) => (
+                      <motion.li
+                        key={item.id}
+                        className="border-border border-b p-2.5 last:border-b-0"
+                        variants={drawerMenuVariants}
+                      >
+                        <a
+                          href={item.href}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const element = document.getElementById(
+                              item.href.substring(1),
+                            );
+                            element?.scrollIntoView({ behavior: "smooth" });
+                            setIsDrawerOpen(false);
+                          }}
+                          className={`hover:text-primary/80 underline-offset-4 transition-colors ${
+                            activeSection === item.href.substring(1)
+                              ? "text-primary font-medium"
+                              : "text-primary/60"
+                          }`}
+                        >
+                          {item.name}
+                        </a>
+                      </motion.li>
+                    ))}
+                  </AnimatePresence>
+                </motion.ul>
+
                 {/* Action buttons */}
                 <div className="flex flex-col gap-2">
                   <Link
-                    href="/"
+                    href="/api/auth/signin?callbackUrl=/app"
                     className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
                   >
-                    Sign Out
+                    Try for free
                   </Link>
                 </div>
               </div>

@@ -42,9 +42,7 @@ export const siteConfig = {
   nav: {
     links: [
       { id: 1, name: "Home", href: "#hero" },
-      { id: 2, name: "How it Works", href: "#bento" },
-      { id: 3, name: "Features", href: "#features" },
-      { id: 4, name: "Pricing", href: "#pricing" },
+      { id: 2, name: "Pricing", href: "#pricing" },
     ],
   },
   hero: {
@@ -69,11 +67,11 @@ export const siteConfig = {
     cta: {
       primary: {
         text: "Try for Free",
-        href: "#",
+        href: "/api/auth/signin?callbackUrl=/app",
       },
       secondary: {
         text: "Log in",
-        href: "#",
+        href: "/api/auth/signin?callbackUrl=/app",
       },
     },
     videoSrc: "https://www.youtube.com/embed/qh3NGpYRG3I?si=4rb-zSdDkVK9qxxb",
