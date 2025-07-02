@@ -27,7 +27,7 @@
     /* Path Aliases */
     "baseUrl": ".",
     "paths": {
-      "e-commerce-agent/*": ["./src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [

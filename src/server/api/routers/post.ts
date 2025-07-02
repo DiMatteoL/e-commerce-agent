@@ -4,8 +4,8 @@ import {
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
-} from "e-commerce-agent/server/api/trpc";
-import { posts } from "e-commerce-agent/server/db/schema";
+} from "@/server/api/trpc";
+import { posts } from "@/server/db/schema";
 
 export const postRouter = createTRPCRouter({
   hello: publicProcedure
