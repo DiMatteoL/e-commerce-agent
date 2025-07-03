@@ -1,4 +1,4 @@
-import { HeroVideoSection } from "@/components/sections/hero-video-section";
+import { HeroVideoSection } from "@/components/landing/sections/hero-video-section";
 import { siteConfig } from "@/lib/config";
 import Link from "next/link";
 

@@ -8,6 +8,7 @@ import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion, useScroll } from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { SignOutButton } from "@/components/app/signout-button";
 
 const INITIAL_WIDTH = "70rem";
 const MAX_WIDTH = "800px";
@@ -39,45 +40,10 @@ const drawerVariants = {
   },
 };
 
-const drawerMenuContainerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 },
-};
-
-const drawerMenuVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 },
-};
-
 export function Navbar() {
   const { scrollY } = useScroll();
   const [hasScrolled, setHasScrolled] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("hero");
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = siteConfig.nav.links.map((item) =>
-        item.href.substring(1),
-      );
-
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          if (rect.top <= 150 && rect.bottom >= 150) {
-            setActiveSection(section);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   useEffect(() => {
     const unsubscribe = scrollY.on("change", (latest) => {
@@ -117,12 +83,7 @@ export function Navbar() {
 
             <div className="flex shrink-0 flex-row items-center gap-1 md:gap-3">
               <div className="flex items-center space-x-6">
-                <Link
-                  className="bg-secondary text-primary-foreground dark:text-secondary-foreground hidden h-8 w-fit items-center justify-center rounded-full border border-white/[0.12] px-4 text-sm font-normal tracking-wide shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] md:flex"
-                  href="/"
-                >
-                  Sign Out
-                </Link>
+                <SignOutButton className="bg-secondary text-primary-foreground dark:text-secondary-foreground hidden h-8 w-fit items-center justify-center rounded-full border border-white/[0.12] px-4 text-sm font-normal tracking-wide shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] md:flex" />
               </div>
               <ThemeToggle />
               <button
@@ -180,12 +141,7 @@ export function Navbar() {
 
                 {/* Action buttons */}
                 <div className="flex flex-col gap-2">
-                  <Link
-                    href="/"
-                    className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
-                  >
-                    Sign Out
-                  </Link>
+                  <SignOutButton className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20" />
                 </div>
               </div>
             </motion.div>

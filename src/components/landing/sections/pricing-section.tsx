@@ -1,6 +1,6 @@
 "use client";
 
-import { SectionHeader } from "@/components/section-header";
+import { SectionHeader } from "@/components/landing/section-header";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
@@ -16,7 +16,7 @@ function PricingTabs({ activeTab, setActiveTab, className }: TabsProps) {
   return (
     <div
       className={cn(
-        "relative flex w-fit items-center rounded-full border p-0.5 backdrop-blur-sm cursor-pointer h-9 flex-row bg-muted",
+        "bg-muted relative flex h-9 w-fit cursor-pointer flex-row items-center rounded-full border p-0.5 backdrop-blur-sm",
         className,
       )}
     >
@@ -25,7 +25,7 @@ function PricingTabs({ activeTab, setActiveTab, className }: TabsProps) {
           key={tab}
           onClick={() => setActiveTab(tab as "yearly" | "monthly")}
           className={cn(
-            "relative z-[1] px-2 h-8 flex items-center justify-center cursor-pointer",
+            "relative z-[1] flex h-8 cursor-pointer items-center justify-center px-2",
             {
               "z-0": activeTab === tab,
             },
@@ -34,7 +34,7 @@ function PricingTabs({ activeTab, setActiveTab, className }: TabsProps) {
           {activeTab === tab && (
             <motion.div
               layoutId="active-tab"
-              className="absolute inset-0 rounded-full bg-white dark:bg-[#3F3F46]  shadow-md border border-border"
+              className="border-border absolute inset-0 rounded-full border bg-white shadow-md dark:bg-[#3F3F46]"
               transition={{
                 duration: 0.2,
                 type: "spring",
@@ -46,13 +46,13 @@ function PricingTabs({ activeTab, setActiveTab, className }: TabsProps) {
           )}
           <span
             className={cn(
-              "relative block text-sm font-medium duration-200 shrink-0",
+              "relative block shrink-0 text-sm font-medium duration-200",
               activeTab === tab ? "text-primary" : "text-muted-foreground",
             )}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
             {tab === "yearly" && (
-              <span className="ml-2 text-xs font-semibold text-secondary bg-secondary/15 py-0.5 w-[calc(100%+1rem)] px-1 rounded-full">
+              <span className="text-secondary bg-secondary/15 ml-2 w-[calc(100%+1rem)] rounded-full px-1 py-0.5 text-xs font-semibold">
                 -20%
               </span>
             )}
@@ -96,17 +96,17 @@ export function PricingSection() {
   return (
     <section
       id="pricing"
-      className="flex flex-col items-center justify-center gap-10 pb-10 w-full relative"
+      className="relative flex w-full flex-col items-center justify-center gap-10 pb-10"
     >
       <SectionHeader>
-        <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-center text-balance">
+        <h2 className="text-center text-3xl font-medium tracking-tighter text-balance md:text-4xl">
           {siteConfig.pricing.title}
         </h2>
-        <p className="text-muted-foreground text-center text-balance font-medium">
+        <p className="text-muted-foreground text-center font-medium text-balance">
           {siteConfig.pricing.description}
         </p>
       </SectionHeader>
-      <div className="relative w-full h-full">
+      <div className="relative h-full w-full">
         <div className="absolute -top-14 left-1/2 -translate-x-1/2">
           <PricingTabs
             activeTab={billingCycle}
@@ -115,38 +115,38 @@ export function PricingSection() {
           />
         </div>
 
-        <div className="grid min-[650px]:grid-cols-2 min-[900px]:grid-cols-3 gap-4 w-full max-w-6xl mx-auto px-6">
+        <div className="mx-auto grid w-full max-w-6xl gap-4 px-6 min-[650px]:grid-cols-2 min-[900px]:grid-cols-3">
           {siteConfig.pricing.pricingItems.map((tier) => (
             <div
               key={tier.name}
               className={cn(
-                "rounded-xl grid grid-rows-[180px_auto_1fr] relative h-fit min-[650px]:h-full min-[900px]:h-fit",
+                "relative grid h-fit grid-rows-[180px_auto_1fr] rounded-xl min-[650px]:h-full min-[900px]:h-fit",
                 tier.isPopular
-                  ? "md:shadow-[0px_61px_24px_-10px_rgba(0,0,0,0.01),0px_34px_20px_-8px_rgba(0,0,0,0.05),0px_15px_15px_-6px_rgba(0,0,0,0.09),0px_4px_8px_-2px_rgba(0,0,0,0.10),0px_0px_0px_1px_rgba(0,0,0,0.08)] bg-accent"
-                  : "bg-[#F3F4F6] dark:bg-[#F9FAFB]/[0.02] border border-border",
+                  ? "bg-accent md:shadow-[0px_61px_24px_-10px_rgba(0,0,0,0.01),0px_34px_20px_-8px_rgba(0,0,0,0.05),0px_15px_15px_-6px_rgba(0,0,0,0.09),0px_4px_8px_-2px_rgba(0,0,0,0.10),0px_0px_0px_1px_rgba(0,0,0,0.08)]"
+                  : "border-border border bg-[#F3F4F6] dark:bg-[#F9FAFB]/[0.02]",
               )}
             >
               <div className="flex flex-col gap-4 p-4">
                 <p className="text-sm">
                   {tier.name}
                   {tier.isPopular && (
-                    <span className="bg-gradient-to-b from-secondary/50 from-[1.92%] to-secondary to-[100%] text-white h-6 inline-flex w-fit items-center justify-center px-2 rounded-full text-sm ml-2 shadow-[0px_6px_6px_-3px_rgba(0,0,0,0.08),0px_3px_3px_-1.5px_rgba(0,0,0,0.08),0px_1px_1px_-0.5px_rgba(0,0,0,0.08),0px_0px_0px_1px_rgba(255,255,255,0.12)_inset,0px_1px_0px_0px_rgba(255,255,255,0.12)_inset]">
+                    <span className="from-secondary/50 to-secondary ml-2 inline-flex h-6 w-fit items-center justify-center rounded-full bg-gradient-to-b from-[1.92%] to-[100%] px-2 text-sm text-white shadow-[0px_6px_6px_-3px_rgba(0,0,0,0.08),0px_3px_3px_-1.5px_rgba(0,0,0,0.08),0px_1px_1px_-0.5px_rgba(0,0,0,0.08),0px_0px_0px_1px_rgba(255,255,255,0.12)_inset,0px_1px_0px_0px_rgba(255,255,255,0.12)_inset]">
                       Popular
                     </span>
                   )}
                 </p>
-                <div className="flex items-baseline mt-2">
+                <div className="mt-2 flex items-baseline">
                   <PriceDisplay tier={tier} />
                   <span className="ml-2">
                     /{billingCycle === "yearly" ? "year" : "month"}
                   </span>
                 </div>
-                <p className="text-sm mt-2">{tier.description}</p>
+                <p className="mt-2 text-sm">{tier.description}</p>
               </div>
 
               <div className="flex flex-col gap-2 p-4">
                 <button
-                  className={`h-10 w-full flex items-center justify-center text-sm font-normal tracking-wide rounded-full px-4 cursor-pointer transition-all ease-out active:scale-95 ${
+                  className={`flex h-10 w-full cursor-pointer items-center justify-center rounded-full px-4 text-sm font-normal tracking-wide transition-all ease-out active:scale-95 ${
                     tier.isPopular
                       ? `${tier.buttonColor} shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)]`
                       : `${tier.buttonColor} shadow-[0px_1px_2px_0px_rgba(255,255,255,0.16)_inset,0px_3px_3px_-1.5px_rgba(16,24,40,0.24),0px_1px_1px_-0.5px_rgba(16,24,40,0.20)]`
@@ -158,7 +158,7 @@ export function PricingSection() {
               <hr className="border-border dark:border-white/20" />
               <div className="p-4">
                 {tier.name !== "Basic" && (
-                  <p className="text-sm mb-4">
+                  <p className="mb-4 text-sm">
                     Everything in {tier.name === "Pro" ? "Basic" : "Pro"} +
                   </p>
                 )}
@@ -167,12 +167,12 @@ export function PricingSection() {
                     <li key={feature} className="flex items-center gap-2">
                       <div
                         className={cn(
-                          "size-5 rounded-full border border-primary/20 flex items-center justify-center",
+                          "border-primary/20 flex size-5 items-center justify-center rounded-full border",
                           tier.isPopular &&
                             "bg-muted-foreground/40 border-border",
                         )}
                       >
-                        <div className="size-3 flex items-center justify-center">
+                        <div className="flex size-3 items-center justify-center">
                           <svg
                             width="8"
                             height="7"

@@ -1,34 +1,23 @@
-import { auth } from "@/server/auth";
-import { redirect } from "next/navigation";
-import Link from "next/link";
+"use client";
+
 import { LatestPost } from "@/components/post";
-import { api, HydrateClient } from "@/trpc/server";
-import { Navbar } from "@/components/sections/navbar";
+import { api } from "@/trpc/react";
+import { useSession } from "next-auth/react";
 
-export default async function AppPage() {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/api/auth/signin?callbackUrl=/app");
-  }
-  const hello = await api.post.hello({ text: "from tRPC" });
-
-  if (session?.user) {
-    void api.post.getLatest.prefetch();
-  }
+export default function AppPage() {
+  const { data: session } = useSession();
+  const { data: hello } = api.post.hello.useQuery({ text: "from tRPC" });
 
   return (
-    <>
-      <Navbar />
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <div className="flex flex-col items-center gap-2">
-          <p>{hello ? hello.greeting : "Loading tRPC query..."}</p>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+      <div className="flex flex-col items-center gap-2">
+        <p>{hello ? hello.greeting : "Loading tRPC query..."}</p>
 
-          <div className="flex flex-col items-center justify-center gap-4">
-            <p>{session && <span>Logged in as {session.user?.name}</span>}</p>
-          </div>
+        <div className="flex flex-col items-center justify-center gap-4">
+          <p>{session && <span>Logged in as {session.user?.name}</span>}</p>
         </div>
-        {session?.user && <LatestPost />}
       </div>
-    </>
+      {session?.user && <LatestPost />}
+    </div>
   );
 }

@@ -1,9 +1,9 @@
-import { CTASection } from "@/components/sections/cta-section";
-import { FAQSection } from "@/components/sections/faq-section";
-import { FooterSection } from "@/components/sections/footer-section";
-import { HeroSection } from "@/components/sections/hero-section";
-import { LandingNavbar } from "@/components/sections/landing-navbar";
-import { PricingSection } from "@/components/sections/pricing-section";
+import { CTASection } from "@/components/landing/sections/cta-section";
+import { FAQSection } from "@/components/landing/sections/faq-section";
+import { FooterSection } from "@/components/landing/sections/footer-section";
+import { HeroSection } from "@/components/landing/sections/hero-section";
+import { LandingNavbar } from "@/components/landing/sections/landing-navbar";
+import { PricingSection } from "@/components/landing/sections/pricing-section";
 
 export default async function Home() {
   return (

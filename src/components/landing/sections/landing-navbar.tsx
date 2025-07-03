@@ -1,7 +1,7 @@
 "use client";
 
 import { Icons } from "@/components/icons";
-import { NavMenu } from "@/components/nav-menu";
+import { NavMenu } from "@/components/landing/nav-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
