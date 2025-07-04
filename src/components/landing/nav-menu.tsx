@@ -112,15 +112,15 @@ export function NavMenu() {
   };
 
   return (
-    <div className="w-full hidden md:block">
+    <div className="hidden w-full md:block">
       <ul
-        className="relative mx-auto flex w-fit rounded-full h-11 px-2 items-center justify-center"
+        className="relative mx-auto flex h-11 w-fit items-center justify-center rounded-full px-2"
         ref={ref}
       >
         {navs.map((item) => (
           <li
             key={item.name}
-            className={`z-10 cursor-pointer h-full flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+            className={`z-10 flex h-full cursor-pointer items-center justify-center px-4 py-2 text-sm font-medium transition-colors duration-200 ${
               activeSection === item.href.substring(1)
                 ? "text-primary"
                 : "text-primary/60 hover:text-primary"
@@ -135,7 +135,7 @@ export function NavMenu() {
           <motion.li
             animate={{ left, width }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="absolute inset-0 my-1.5 rounded-full bg-accent/60 border border-border"
+            className="bg-accent/60 border-border absolute inset-0 my-1.5 rounded-full border"
           />
         )}
       </ul>

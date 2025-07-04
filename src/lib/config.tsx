@@ -25,7 +25,7 @@ export const siteConfig = {
   name: "Cal AI",
   description: "Smart scheduling powered by AI.",
   cta: "Get Started",
-  url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   keywords: [
     "AI Calendar",
     "Smart Scheduling",
