@@ -6,7 +6,12 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
-import { AnimatePresence, motion, useScroll } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useScroll,
+  type AnimationGeneratorType,
+} from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -27,7 +32,7 @@ const drawerVariants = {
     y: 0,
     rotate: 0,
     transition: {
-      type: "spring",
+      type: "spring" as AnimationGeneratorType,
       damping: 15,
       stiffness: 200,
       staggerChildren: 0.03,

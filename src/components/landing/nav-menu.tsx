@@ -22,7 +22,7 @@ export function NavMenu() {
   React.useEffect(() => {
     // Initialize with first nav item
     const firstItem = ref.current?.querySelector(
-      `[href="#${navs[0].href.substring(1)}"]`,
+      `[href="#${navs[0]!.href.substring(1)}"]`,
     )?.parentElement;
     if (firstItem) {
       const rect = firstItem.getBoundingClientRect();
@@ -40,7 +40,7 @@ export function NavMenu() {
       const sections = navs.map((item) => item.href.substring(1));
 
       // Find the section closest to viewport top
-      let closestSection = sections[0];
+      let closestSection = sections[0]!;
       let minDistance = Infinity;
 
       for (const section of sections) {
