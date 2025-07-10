@@ -2,6 +2,8 @@ import "@/styles/globals.css";
 
 import { SessionProvider } from "next-auth/react";
 import { Navbar } from "@/components/app/navbar";
+import { SessionGuard } from "@/components/app/session-guard";
+import { CenteredSpinner } from "@/components/ui/spinner";
 import { auth } from "@/server/auth";
 import { redirect } from "next/navigation";
 
@@ -17,7 +19,7 @@ export default async function RootLayout({
     <SessionProvider session={session}>
       <main>
         <Navbar />
-        {children}
+        <SessionGuard fallback={<CenteredSpinner />}>{children}</SessionGuard>
       </main>
     </SessionProvider>
   );

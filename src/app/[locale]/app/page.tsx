@@ -17,7 +17,7 @@ export default function AppPage() {
           <p>{session && <span>Logged in as {session.user?.name}</span>}</p>
         </div>
       </div>
-      {session?.user && <LatestPost />}
+      <LatestPost />
     </div>
   );
 }
