@@ -2,6 +2,7 @@
 
 import { Icons } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguagePicker } from "@/components/language-picker";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
 import {
@@ -89,6 +90,7 @@ export function Navbar() {
               <div className="flex items-center space-x-6">
                 <SignOutButton className="bg-secondary text-primary-foreground dark:text-secondary-foreground hidden h-8 w-fit items-center justify-center rounded-full border border-white/[0.12] px-4 text-sm font-normal tracking-wide shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] md:flex" />
               </div>
+              <LanguagePicker className="hidden md:block" />
               <ThemeToggle />
               <button
                 className="border-border flex size-8 cursor-pointer items-center justify-center rounded-md border md:hidden"
@@ -146,6 +148,9 @@ export function Navbar() {
                 {/* Action buttons */}
                 <div className="flex flex-col gap-2">
                   <SignOutButton className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20" />
+                  <div className="flex items-center justify-center">
+                    <LanguagePicker />
+                  </div>
                 </div>
               </div>
             </motion.div>

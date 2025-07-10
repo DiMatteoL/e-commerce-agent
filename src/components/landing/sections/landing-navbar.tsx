@@ -3,6 +3,7 @@
 import { Icons } from "@/components/icons";
 import { NavMenu } from "@/components/landing/nav-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguagePicker } from "@/components/language-picker";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
@@ -132,6 +133,7 @@ export function LandingNavbar() {
                   Try for free
                 </Link>
               </div>
+              <LanguagePicker className="hidden md:block" />
               <ThemeToggle />
               <button
                 className="border-border flex size-8 cursor-pointer items-center justify-center rounded-md border md:hidden"
@@ -228,6 +230,9 @@ export function LandingNavbar() {
                   >
                     Try for free
                   </Link>
+                  <div className="flex items-center justify-center">
+                    <LanguagePicker />
+                  </div>
                 </div>
               </div>
             </motion.div>

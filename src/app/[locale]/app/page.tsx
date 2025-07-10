@@ -3,10 +3,12 @@
 import { LatestPost } from "@/components/post";
 import { api } from "@/trpc/react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 export default function AppPage() {
   const { data: session } = useSession();
   const { data: hello } = api.post.hello.useQuery({ text: "from tRPC" });
+  const t = useTranslations("HomePage");
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4">
@@ -18,6 +20,7 @@ export default function AppPage() {
         </div>
       </div>
       <LatestPost />
+      <p>{t("title")}</p>
     </div>
   );
 }
