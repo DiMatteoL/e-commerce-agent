@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 interface LanguagePickerProps {
   className?: string;
@@ -50,15 +51,10 @@ export function LanguagePicker({ className }: LanguagePickerProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          className={cn(
-            "border-border bg-background hover:bg-accent hover:text-accent-foreground flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors",
-            className,
-          )}
-        >
+        <Button variant="outline">
           <Globe className="size-4" />
           <span className="font-medium">{getLanguageDisplay(locale)}</span>
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
         {locales.map((loc) => (

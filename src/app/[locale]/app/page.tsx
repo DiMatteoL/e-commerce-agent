@@ -1,5 +1,6 @@
 "use client";
 
+import { ChatWindow } from "@/components/app/chat/chat-window";
 import { LatestPost } from "@/components/post";
 import { api } from "@/trpc/react";
 import { useSession } from "next-auth/react";
@@ -21,6 +22,12 @@ export default function AppPage() {
       </div>
       <LatestPost />
       <p>{t("title")}</p>
+
+      <ChatWindow
+        endpoint="/api/chat"
+        emptyStateComponent={<div>No messages yet</div>}
+        placeholder="Ask me anything..."
+      />
     </div>
   );
 }

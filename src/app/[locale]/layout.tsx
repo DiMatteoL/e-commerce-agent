@@ -1,6 +1,7 @@
 import "@/styles/globals.css";
 
 import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { Toaster } from "@/components/ui/sonner";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { type Metadata } from "next";
@@ -70,6 +71,7 @@ export default async function RootLayout({
                   <div className="border-border absolute top-0 right-6 z-10 block h-full w-px border-r"></div>
                   {children}
                 </div>
+                <Toaster />
               </NextIntlClientProvider>
             </ThemeProvider>
           </HydrateClient>
