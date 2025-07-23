@@ -1,22 +1,11 @@
 import { type NextRequest } from "next/server";
 import type { Message as VercelChatMessage } from "ai";
 
-import { ChatAnthropic } from "@langchain/anthropic";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { chatStream } from "@/features/ai-chat/chat";
+import { saveChat } from "@/features/ai-chat/save-chat";
+import { auth } from "@/server/auth";
 
 export const runtime = "edge";
-
-const formatMessage = (message: VercelChatMessage) => {
-  if (message.role === "user") {
-    return new HumanMessage(message.content);
-  } else if (message.role === "assistant") {
-    return new AIMessage(message.content);
-  }
-  return new HumanMessage(message.content); // fallback
-};
-
-const SYSTEM_PROMPT = `You are a pirate named Patchy. All responses must be extremely verbose and in pirate dialect.`;
 
 /**
  * This handler uses LangChain Anthropic with streaming response
@@ -24,22 +13,22 @@ const SYSTEM_PROMPT = `You are a pirate named Patchy. All responses must be extr
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as { messages?: VercelChatMessage[] };
+    const body = (await req.json()) as {
+      messages?: VercelChatMessage[];
+      id?: string;
+    };
     const messages = body.messages ?? [];
+    const chatId = body.id;
 
-    // Convert messages to LangChain format
-    const langchainMessages = messages.map(formatMessage);
-
-    // Add system message at the beginning
-    const allMessages = [new HumanMessage(SYSTEM_PROMPT), ...langchainMessages];
-
-    const model = new ChatAnthropic({
-      temperature: 0.8,
-      model: "claude-3-haiku-20240307",
-    });
+    // Get the current user session
+    const session = await auth();
+    const userId = session?.user?.id;
 
     // Create the stream
-    const stream = await model.stream(allMessages);
+    const stream = await chatStream(messages);
+
+    // Collect the complete assistant response
+    let assistantResponse = "";
 
     // Create a readable stream that formats the response for the frontend
     const readableStream = new ReadableStream({
@@ -48,6 +37,7 @@ export async function POST(req: NextRequest) {
           for await (const chunk of stream) {
             const content = chunk.content;
             if (typeof content === "string") {
+              assistantResponse += content;
               const data = JSON.stringify({
                 type: "text",
                 content: content,
@@ -55,6 +45,16 @@ export async function POST(req: NextRequest) {
               const formatted = `data: ${data}\n\n`;
               controller.enqueue(new TextEncoder().encode(formatted));
             }
+          }
+
+          // Save the chat to database after streaming is complete
+          if (userId && messages.length > 0) {
+            await saveChat({
+              chatId,
+              userId,
+              messages,
+              assistantResponse,
+            });
           }
 
           // Send the done signal

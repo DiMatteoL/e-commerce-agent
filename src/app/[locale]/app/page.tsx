@@ -27,6 +27,7 @@ export default function AppPage() {
         endpoint="/api/chat"
         emptyStateComponent={<div>No messages yet</div>}
         placeholder="Ask me anything..."
+        showIntermediateStepsToggle={true}
       />
     </div>
   );

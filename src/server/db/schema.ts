@@ -50,6 +50,28 @@ export const users = createTable("user", (d) => ({
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
+  chats: many(chats),
+}));
+
+export const chats = createTable(
+  "chat",
+  (d) => ({
+    id: d.text().primaryKey(),
+    userId: d
+      .varchar({ length: 255 })
+      .references(() => users.id, { onDelete: "cascade" }),
+    payload: d.jsonb(),
+    createdAt: d
+      .timestamp({ withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+  }),
+  (t) => [index("chat_user_id_idx").on(t.userId)],
+);
+
+export const chatsRelations = relations(chats, ({ one }) => ({
+  user: one(users, { fields: [chats.userId], references: [users.id] }),
 }));
 
 export const accounts = createTable(
