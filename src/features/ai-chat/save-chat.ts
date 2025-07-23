@@ -6,7 +6,7 @@ import { chats } from "@/server/db/schema";
 
 export interface SaveChatParams {
   chatId?: string;
-  userId: string;
+  userId?: string;
   messages: VercelChatMessage[];
   assistantResponse: string;
 }
@@ -27,7 +27,7 @@ export async function saveChat({
   const payload = {
     id,
     title,
-    userId,
+    userId: userId ?? null,
     createdAt: createdAt.toISOString(),
     messages: [
       ...messages,
@@ -43,7 +43,7 @@ export async function saveChat({
     .insert(chats)
     .values({
       id,
-      userId,
+      userId: userId ?? null,
       payload,
       createdAt,
     })

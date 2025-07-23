@@ -5,5 +5,29 @@
   },
   "Sidebar": {
     "history": "History"
+  },
+  "NavUser": {
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "logout": "Log out",
+    "notLoggedIn": "Not logged in",
+    "clickToLogin": "Click to log in",
+    "login": "Log in"
+  },
+  "EmptyScreen": {
+    "title": "Google Analytics E-commerce Optimization Assistant",
+    "description": "I'm here to help you analyze your GA data and boost your e-commerce conversions. Start a conversation or try these examples:",
+    "examples": {
+      "conversionRates": "Analyze conversion rates",
+      "cartAbandonment": "Reduce cart abandonment",
+      "trafficSources": "Optimize traffic sources"
+    },
+    "messages": {
+      "conversionRates": "My e-commerce site has low conversion rates. Sessions are up 10% but purchases are down. Can you help me identify the issue?",
+      "cartAbandonment": "I'm seeing high cart abandonment rates in my Google Analytics. What optimizations can I implement to improve this?",
+      "trafficSources": "Which traffic sources are performing best for my e-commerce conversions, and how can I optimize underperforming channels?"
+    }
   }
 }

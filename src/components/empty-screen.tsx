@@ -1,32 +1,35 @@
+"use client";
+
 import { type UseChatHelpers } from "ai/react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
-const exampleMessages = [
-  {
-    heading: "Explain technical concepts",
-    message: `What is a "serverless function"?`,
-  },
-  {
-    heading: "Summarize an article",
-    message: "Summarize the following article for a 2nd grader: \n",
-  },
-  {
-    heading: "Draft an email",
-    message: `Draft an email to my boss about the following: \n`,
-  },
-];
-
 export function EmptyScreen({ setInput }: Pick<UseChatHelpers, "setInput">) {
+  const t = useTranslations("EmptyScreen");
+
+  const exampleMessages = [
+    {
+      heading: t("examples.conversionRates"),
+      message: t("messages.conversionRates"),
+    },
+    {
+      heading: t("examples.cartAbandonment"),
+      message: t("messages.cartAbandonment"),
+    },
+    {
+      heading: t("examples.trafficSources"),
+      message: t("messages.trafficSources"),
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-2xl px-4">
       <div className="bg-background rounded-lg border p-8">
-        <h1 className="mb-2 text-lg font-semibold">
-          Welcome to the Supabaseified Next.js AI Chatbot!
-        </h1>
+        <h1 className="mb-2 text-lg font-semibold">{t("title")}</h1>
         <p className="text-muted-foreground leading-normal">
-          You can start a conversation here or try the following examples:
+          {t("description")}
         </p>
         <div className="mt-4 flex flex-col items-start space-y-2">
           {exampleMessages.map((message, index) => (

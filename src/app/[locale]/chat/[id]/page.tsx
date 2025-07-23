@@ -4,21 +4,41 @@ import { Chat } from "@/components/chat";
 import { api } from "@/trpc/react";
 import { useParams } from "next/navigation";
 import { type Message } from "ai";
+import { useEffect, useState } from "react";
+import type { Chat as ChatType } from "@/server/api/routers/chat";
 
 export default function ChatIdPage() {
   const params = useParams();
   const chatId = params.id as string;
+  const [chat, setChat] = useState<ChatType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const utils = api.useUtils();
 
-  const {
-    data: chat,
-    isLoading,
-    error,
-  } = api.chat.getChat.useQuery(
-    { id: chatId },
-    {
-      enabled: !!chatId,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  const getChatOrClaimMutation = api.chat.getChatOrClaim.useMutation({
+    onSuccess: (data) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      setChat(data);
+      setIsLoading(false);
+      // Invalidate user chats cache to update sidebar
+      void utils.user.getUserWithChats.invalidate();
     },
-  );
+    onError: (err) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      setError(err.message ?? "Error loading chat");
+      setIsLoading(false);
+    },
+  });
+
+  useEffect(() => {
+    if (chatId) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      getChatOrClaimMutation.mutate({ id: chatId });
+    }
+    // Only depend on chatId to avoid infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatId]);
 
   if (isLoading) {
     return (
@@ -31,9 +51,7 @@ export default function ChatIdPage() {
   if (error || !chat) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">
-          {error ? "Error loading chat" : "Chat not found"}
-        </div>
+        <div className="text-muted-foreground">{error ?? "Chat not found"}</div>
       </div>
     );
   }
@@ -41,7 +59,7 @@ export default function ChatIdPage() {
   // Convert chat messages to the format expected by the Chat component
   const initialMessages: Message[] = chat.messages.map((msg) => ({
     id: msg.id,
-    role: msg.role as "user" | "assistant" | "system",
+    role: msg.role,
     content: msg.content,
   }));
 

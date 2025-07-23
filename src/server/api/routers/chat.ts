@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, desc, and, isNotNull } from "drizzle-orm";
+import { eq, desc, and, isNotNull, isNull } from "drizzle-orm";
 
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { chats } from "@/server/db/schema";
@@ -159,5 +159,46 @@ export const chatRouter = createTRPCRouter({
           error: "Failed to save chat",
         };
       }
+    }),
+
+  // Get a single chat by ID, or claim it if it's unowned
+  getChatOrClaim: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // First, try to get the chat if it's owned by the current user
+      const userOwnedChat = await ctx.db
+        .select()
+        .from(chats)
+        .where(
+          and(eq(chats.id, input.id), eq(chats.userId, ctx.session.user.id)),
+        )
+        .limit(1);
+
+      if (userOwnedChat[0]) {
+        return userOwnedChat[0].payload as Chat;
+      }
+
+      // If not found, check if there's an unowned chat with this ID
+      const unownedChat = await ctx.db
+        .select()
+        .from(chats)
+        .where(and(eq(chats.id, input.id), isNull(chats.userId)))
+        .limit(1);
+
+      if (unownedChat[0]) {
+        // Claim the chat by updating its userId
+        await ctx.db
+          .update(chats)
+          .set({
+            userId: ctx.session.user.id,
+            updatedAt: new Date(),
+          })
+          .where(eq(chats.id, input.id));
+
+        return unownedChat[0].payload as Chat;
+      }
+
+      // Chat not found or owned by another user
+      return null;
     }),
 });

@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
           }
 
           // Save the chat to database after streaming is complete
-          if (userId && messages.length > 0) {
+          if (messages.length > 0) {
             const finalChatId = await saveChat({
               chatId,
               userId,
@@ -65,7 +65,6 @@ export async function POST(req: NextRequest) {
               assistantResponse,
             });
 
-            // Send the chat ID to the client for redirection
             const redirectData = JSON.stringify({
               type: "redirect",
               chatId: finalChatId,

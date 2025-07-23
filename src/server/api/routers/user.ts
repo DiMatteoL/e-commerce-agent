@@ -1,13 +1,21 @@
 import { eq, desc } from "drizzle-orm";
 
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { users, chats } from "@/server/db/schema";
 import type { Chat } from "./chat";
 
 export const userRouter = createTRPCRouter({
   // Get current user with their chat titles in backward chronological order
-  getUserWithChats: protectedProcedure.query(async ({ ctx }) => {
+  getUserWithChats: publicProcedure.query(async ({ ctx }) => {
     try {
+      // Return empty response if no session
+      if (!ctx.session?.user?.id) {
+        return {
+          user: null,
+          chats: [],
+        };
+      }
+
       // Get user information
       const user = await ctx.db
         .select({
