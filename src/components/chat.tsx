@@ -187,17 +187,17 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         ) : (
           <EmptyScreen setInput={setInputWrapper} />
         )}
+        <ChatPanel
+          id={currentChatId}
+          isLoading={isLoading}
+          stop={handleStop}
+          append={append}
+          reload={handleReload}
+          messages={messages}
+          input={input}
+          setInput={setInputWrapper}
+        />
       </div>
-      <ChatPanel
-        id={currentChatId}
-        isLoading={isLoading}
-        stop={handleStop}
-        append={append}
-        reload={handleReload}
-        messages={messages}
-        input={input}
-        setInput={setInputWrapper}
-      />
     </>
   );
 }
