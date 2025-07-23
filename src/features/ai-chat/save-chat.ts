@@ -29,7 +29,6 @@ export async function saveChat({
     title,
     userId,
     createdAt: createdAt.toISOString(),
-    path: `/chat/${id}`,
     messages: [
       ...messages,
       {

@@ -16,7 +16,7 @@ export function SessionGuard({ children, fallback }: SessionGuardProps) {
   useEffect(() => {
     if (status !== "loading") {
       if (!session?.user) {
-        redirect("/api/auth/signin?callbackUrl=/app");
+        redirect("/api/auth/signin?callbackUrl=/chat");
       }
       setIsReady(true);
     }

@@ -3,6 +3,7 @@
 import { type Message } from "ai";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useLocale } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { ChatList } from "@/components/chat-list";
@@ -10,6 +11,7 @@ import { ChatPanel } from "@/components/chat-panel";
 import { EmptyScreen } from "@/components/empty-screen";
 import { ChatScrollAnchor } from "@/components/chat-scroll-anchor";
 import { useLocalStorage } from "usehooks-ts";
+import { api } from "@/trpc/react";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,8 @@ export interface ChatProps extends React.ComponentProps<"div"> {
 }
 
 export function Chat({ id, initialMessages, className }: ChatProps) {
+  const locale = useLocale();
+  const utils = api.useUtils();
   const [previewToken, setPreviewToken] = useLocalStorage<string | null>(
     "ai-token",
     null,
@@ -42,6 +46,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages ?? []);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [currentChatId, setCurrentChatId] = useState(id);
 
   const setInputWrapper = (value: string | ((prev: string) => string)) => {
     if (typeof value === "function") {
@@ -72,7 +77,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         },
         body: JSON.stringify({
           messages: [...messages, userMessage],
-          id,
+          id: currentChatId,
           previewToken,
         }),
       });
@@ -117,6 +122,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
                 const parsed = JSON.parse(data) as {
                   type: string;
                   content?: string;
+                  chatId?: string;
                 };
                 if (parsed.type === "text" && parsed.content) {
                   assistantMessage.content += parsed.content;
@@ -127,6 +133,22 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
                     };
                     return newMessages;
                   });
+                } else if (parsed.type === "redirect" && parsed.chatId) {
+                  // Invalidate the user chats cache to refresh the sidebar
+                  void utils.user.getUserWithChats.invalidate();
+
+                  // Update the current chat ID for subsequent operations
+                  setCurrentChatId(parsed.chatId);
+
+                  // Only update URL if we're not already on the chat ID page
+                  if (!id || id !== parsed.chatId) {
+                    // Update URL without navigation to prevent flicker
+                    window.history.pushState(
+                      null,
+                      "",
+                      `/${locale}/chat/${parsed.chatId}`,
+                    );
+                  }
                 }
               } catch (e) {
                 console.error("Error parsing chunk:", e);
@@ -189,7 +211,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         )}
       </div>
       <ChatPanel
-        id={id}
+        id={currentChatId}
         isLoading={isLoading}
         stop={handleStop}
         append={append}

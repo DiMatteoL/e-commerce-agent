@@ -58,12 +58,21 @@ export async function POST(req: NextRequest) {
 
           // Save the chat to database after streaming is complete
           if (userId && messages.length > 0) {
-            await saveChat({
+            const finalChatId = await saveChat({
               chatId,
               userId,
               messages,
               assistantResponse,
             });
+
+            // Send the chat ID to the client for redirection
+            const redirectData = JSON.stringify({
+              type: "redirect",
+              chatId: finalChatId,
+            });
+            controller.enqueue(
+              new TextEncoder().encode(`data: ${redirectData}\n\n`),
+            );
           }
 
           // Send the done signal

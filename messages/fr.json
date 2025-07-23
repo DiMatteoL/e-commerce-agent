@@ -2,5 +2,8 @@
   "HomePage": {
     "title": "Bonjour le monde!",
     "about": "Aller à la page à propos"
+  },
+  "Sidebar": {
+    "history": "Historique"
   }
 }
