@@ -5,8 +5,6 @@ import { chatStream } from "@/features/ai-chat/chat";
 import { saveChat } from "@/features/ai-chat/save-chat";
 import { auth } from "@/server/auth";
 
-export const runtime = "edge";
-
 /**
  * This handler uses LangChain Anthropic with streaming response
  * Compatible with the chat-window.tsx frontend expectations
@@ -17,6 +15,7 @@ export async function POST(req: NextRequest) {
       messages?: VercelChatMessage[];
       id?: string;
     };
+    console.log("body", body);
     const messages = body.messages ?? [];
     const chatId = body.id;
 
@@ -24,8 +23,18 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     const userId = session?.user?.id;
 
-    // Create the stream
-    const stream = await chatStream(messages);
+    // Prepare user info for the bot if user is authenticated
+    const userInfo = session?.user
+      ? {
+          id: session.user.id,
+          name: session.user.name,
+          email: session.user.email,
+          image: session.user.image,
+        }
+      : undefined;
+
+    // Create the stream with user context
+    const stream = await chatStream(messages, userInfo);
 
     // Collect the complete assistant response
     let assistantResponse = "";

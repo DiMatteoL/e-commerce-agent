@@ -39,11 +39,29 @@ export const llm = new ChatAnthropic({
 
 export const llmWithTools = llm.bindTools([calculatorTool]);
 
-export async function chatStream(messages: VercelChatMessage[]) {
+interface UserInfo {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
+export async function chatStream(
+  messages: VercelChatMessage[],
+  userInfo?: UserInfo,
+) {
   const langchainMessages = messages.map(formatMessage);
 
+  // Create personalized system prompt if user is authenticated
+  const systemPrompt = userInfo
+    ? `${SYSTEM_PROMPT}
+
+You are currently assisting ${userInfo.name ?? "a user"} (User ID: ${userInfo.id}${userInfo.email ? `, Email: ${userInfo.email}` : ""}).
+Personalize your responses when appropriate and feel free to reference the user by name in a natural, friendly way.`
+    : SYSTEM_PROMPT;
+
   // Add system message at the beginning
-  const allMessages = [new SystemMessage(SYSTEM_PROMPT), ...langchainMessages];
+  const allMessages = [new SystemMessage(systemPrompt), ...langchainMessages];
 
   // Create the stream
   const stream = await llm.stream(allMessages);

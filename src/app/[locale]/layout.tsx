@@ -10,6 +10,11 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { ThemeProvider } from "@/app/_providers/theme-provider";
 import { HydrateClient } from "@/trpc/server";
 import { getMessages } from "next-intl/server";
+import { auth } from "@/server/auth";
+import { SessionProvider } from "next-auth/react";
+import { Header } from "@/components/app/header";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -49,6 +54,7 @@ export default async function RootLayout({
   }
 
   const messages = await getMessages();
+  const session = await auth();
 
   return (
     <html
@@ -66,8 +72,22 @@ export default async function RootLayout({
               disableTransitionOnChange
             >
               <NextIntlClientProvider messages={messages}>
-                {children}
-                <Toaster />
+                <SessionProvider session={session}>
+                  <SidebarProvider
+                    style={
+                      { "--sidebar-width": "350px" } as React.CSSProperties
+                    }
+                  >
+                    <AppSidebar />
+                    <SidebarInset>
+                      <Header />
+                      <div className="flex flex-1 flex-col gap-4 p-4">
+                        {children}
+                      </div>
+                    </SidebarInset>
+                  </SidebarProvider>
+                  <Toaster />
+                </SessionProvider>
               </NextIntlClientProvider>
             </ThemeProvider>
           </HydrateClient>
