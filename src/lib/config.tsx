@@ -67,11 +67,11 @@ export const siteConfig = {
     cta: {
       primary: {
         text: "Try for Free",
-        href: "/api/auth/signin?callbackUrl=/app",
+        href: "/api/auth/signin?callbackUrl=/chat",
       },
       secondary: {
         text: "Log in",
-        href: "/api/auth/signin?callbackUrl=/app",
+        href: "/api/auth/signin?callbackUrl=/chat",
       },
     },
     videoSrc: "https://www.youtube.com/embed/qh3NGpYRG3I?si=4rb-zSdDkVK9qxxb",

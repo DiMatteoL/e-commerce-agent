@@ -2,5 +2,32 @@
   "HomePage": {
     "title": "Bonjour le monde!",
     "about": "Aller à la page à propos"
+  },
+  "Sidebar": {
+    "history": "Historique"
+  },
+  "NavUser": {
+    "language": "Langue",
+    "theme": "Thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "logout": "Se déconnecter",
+    "notLoggedIn": "Non connecté",
+    "clickToLogin": "Cliquez pour vous connecter",
+    "login": "Se connecter"
+  },
+  "EmptyScreen": {
+    "title": "Assistant d'Optimisation E-commerce Google Analytics",
+    "description": "Je suis là pour vous aider à analyser vos données GA et améliorer vos conversions e-commerce. Commencez une conversation ou essayez ces exemples :",
+    "examples": {
+      "conversionRates": "Analyser les taux de conversion",
+      "cartAbandonment": "Réduire l'abandon de panier",
+      "trafficSources": "Optimiser les sources de trafic"
+    },
+    "messages": {
+      "conversionRates": "Mon site e-commerce a de faibles taux de conversion. Les sessions ont augmenté de 10% mais les achats ont diminué. Pouvez-vous m'aider à identifier le problème ?",
+      "cartAbandonment": "Je constate des taux élevés d'abandon de panier dans mes Google Analytics. Quelles optimisations puis-je mettre en place pour améliorer cela ?",
+      "trafficSources": "Quelles sources de trafic performent le mieux pour mes conversions e-commerce, et comment puis-je optimiser les canaux sous-performants ?"
+    }
   }
 }
