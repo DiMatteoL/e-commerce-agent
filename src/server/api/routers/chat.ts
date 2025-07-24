@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, desc, and, isNotNull, isNull } from "drizzle-orm";
+import { eq, desc, and, isNull } from "drizzle-orm";
 
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { chats } from "@/server/db/schema";
@@ -31,6 +31,7 @@ export const chatRouter = createTRPCRouter({
 
       return (data?.map((entry) => entry.payload) as Chat[]) ?? [];
     } catch (error) {
+      console.error("get chats error", error);
       return [];
     }
   }),
@@ -63,6 +64,7 @@ export const chatRouter = createTRPCRouter({
 
         return { success: true };
       } catch (error) {
+        console.error("remove chat error", error);
         return {
           error: "Unauthorized",
         };
@@ -119,7 +121,7 @@ export const chatRouter = createTRPCRouter({
 
       await ctx.db
         .update(chats)
-        .set({ payload: payload as any })
+        .set({ payload: payload })
         .where(
           and(eq(chats.id, input.id), eq(chats.userId, ctx.session.user.id)),
         );
@@ -142,12 +144,12 @@ export const chatRouter = createTRPCRouter({
           .values({
             id: input.id,
             userId: ctx.session.user.id,
-            payload: input.chat as any,
+            payload: input.chat,
           })
           .onConflictDoUpdate({
             target: chats.id,
             set: {
-              payload: input.chat as any,
+              payload: input.chat,
               updatedAt: new Date(),
             },
           });

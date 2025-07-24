@@ -20,7 +20,7 @@ export function SessionGuard({ children, fallback }: SessionGuardProps) {
       }
       setIsReady(true);
     }
-  }, [status]);
+  }, [status, session]);
 
   if (status === "loading" || !isReady) {
     return fallback ?? <div>Loading...</div>;

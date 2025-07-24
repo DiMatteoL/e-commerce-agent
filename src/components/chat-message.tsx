@@ -30,24 +30,27 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
       </div>
       <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
         <MemoizedReactMarkdown
-          // className="prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 break-words"
           remarkPlugins={[remarkGfm, remarkMath]}
           components={{
             p({ children }) {
               return <p className="mb-2 last:mb-0">{children}</p>;
             },
-            code({ node, inline, className, children, ...props }) {
+            // @ts-expect-error - react-markdown types are complex
+            code({ inline, className, children, ...props }) {
+              // @ts-expect-error - children array access
               if (children.length) {
+                // @ts-expect-error - children array access
                 if (children[0] == "▍") {
                   return (
                     <span className="mt-1 animate-pulse cursor-default">▍</span>
                   );
                 }
 
+                // @ts-expect-error - children array mutation
                 children[0] = (children[0] as string).replace("`▍`", "▍");
               }
 
-              const match = /language-(\w+)/.exec(className || "");
+              const match = /language-(\w+)/.exec(className ?? "");
 
               if (inline) {
                 return (
@@ -60,7 +63,8 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
               return (
                 <CodeBlock
                   key={Math.random()}
-                  language={match?.[1] || ""}
+                  language={match?.[1] ?? ""}
+                  // eslint-disable-next-line @typescript-eslint/no-base-to-string
                   value={String(children).replace(/\n$/, "")}
                   {...props}
                 />

@@ -15,17 +15,14 @@ export default function ChatIdPage() {
   const [error, setError] = useState<string | null>(null);
   const utils = api.useUtils();
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
   const getChatOrClaimMutation = api.chat.getChatOrClaim.useMutation({
     onSuccess: (data) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       setChat(data);
       setIsLoading(false);
       // Invalidate user chats cache to update sidebar
       void utils.user.getUserWithChats.invalidate();
     },
     onError: (err) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       setError(err.message ?? "Error loading chat");
       setIsLoading(false);
     },
@@ -33,7 +30,6 @@ export default function ChatIdPage() {
 
   useEffect(() => {
     if (chatId) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       getChatOrClaimMutation.mutate({ id: chatId });
     }
     // Only depend on chatId to avoid infinite loops
