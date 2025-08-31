@@ -51,6 +51,7 @@
     "cobe": "^0.6.4",
     "color-bits": "^1.1.0",
     "drizzle-orm": "^0.41.0",
+    "googleapis": "^144.0.0",
     "lucide-react": "^0.525.0",
     "marked": "^15.0.7",
     "motion": "^12.23.0",
