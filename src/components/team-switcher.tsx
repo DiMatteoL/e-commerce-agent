@@ -24,6 +24,17 @@ export function TeamSwitcher() {
   });
   const accounts = accountsQuery.data ? [...accountsQuery.data] : [];
   const isLoadingAccounts = accountsQuery.isLoading;
+  const errorMessage = accountsQuery.error?.message ?? null;
+  const errorCode = (accountsQuery.error as any)?.data?.code as
+    | string
+    | undefined;
+  const unauthorized = errorCode === "UNAUTHORIZED";
+  const apiNotEnabled =
+    errorCode === "PRECONDITION_FAILED" ||
+    errorMessage?.toLowerCase().includes("api is not enabled") === true;
+
+  // If you have a way to know the GCP project ID for the OAuth client, you can pass it here.
+  const projectId = undefined as string | undefined;
 
   const propertyLabel =
     data?.property?.propertyDisplayName ??
@@ -68,6 +79,10 @@ export function TeamSwitcher() {
         onOpenChange={setOpen}
         accounts={accounts}
         loading={isLoadingAccounts}
+        errorMessage={errorMessage}
+        unauthorized={unauthorized}
+        apiNotEnabled={apiNotEnabled}
+        projectId={projectId}
       />
     </>
   );
