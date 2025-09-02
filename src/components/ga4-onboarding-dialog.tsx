@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,7 @@ import {
 import { GoogleAccountCard } from "@/components/ga4/account-card";
 import { GooglePropertyCard } from "@/components/ga4/property-card";
 import { api } from "@/trpc/react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Ga4DataStream = {
   streamResourceName: string;
@@ -39,23 +41,23 @@ export type Ga4OnboardingDialogProps = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   accounts: Ga4AccountSummary[];
+  loading?: boolean;
 };
-
-const TITLE = "Connect Google Analytics 4 properties" as const;
-const DESCRIPTION =
-  "Choose a GA4 property (and app) to onboard. You can adjust later in settings." as const;
 
 export function Ga4OnboardingDialog({
   open = true,
   onOpenChange,
   accounts,
+  loading = false,
 }: Ga4OnboardingDialogProps) {
+  const t = useTranslations("GA4OnboardingDialog");
   const [selectedProperty, setSelectedProperty] = React.useState<string | null>(
     null,
   );
   const [submitting, setSubmitting] = React.useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const utils = api.useUtils();
+
   const selectMutation = api.google_analytics.selectProperty.useMutation();
 
   const isPropChecked = (prop: Ga4PropertySummary) =>
@@ -72,11 +74,10 @@ export function Ga4OnboardingDialog({
     if (!selectedProperty) return;
     setSubmitting(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const res = await selectMutation.mutateAsync({
+      await selectMutation.mutateAsync({
         propertyResourceName: selectedProperty,
       });
-      console.log({ picked: [selectedProperty], apiResult: res });
+      await utils.google_analytics.getSelectedProperty.invalidate();
       onOpenChange?.(false);
     } catch (err) {
       console.error(err);
@@ -90,12 +91,18 @@ export function Ga4OnboardingDialog({
       <DialogContent className="max-w-2xl">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>{TITLE}</DialogTitle>
-            <DialogDescription>{DESCRIPTION}</DialogDescription>
+            <DialogTitle>{t("title")}</DialogTitle>
+            <DialogDescription>{t("description")}</DialogDescription>
           </DialogHeader>
 
           <div className="mt-4 max-h-[60vh] space-y-4 overflow-auto pr-2">
-            {accounts.length === 0 ? (
+            {loading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-64" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : accounts.length === 0 ? (
               <div className="text-muted-foreground">
                 No GA4 accounts found.
               </div>
@@ -127,6 +134,7 @@ export function Ga4OnboardingDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange?.(false)}
+              disabled={submitting}
             >
               Cancel
             </Button>

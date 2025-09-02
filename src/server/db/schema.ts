@@ -68,17 +68,28 @@ export const chats = createTable(
       .varchar({ length: 255 })
       .references(() => users.id, { onDelete: "cascade" }),
     payload: d.jsonb(),
+    // Relation to the GA property selected when the chat was created/saved
+    selectedGaPropertyId: d
+      .integer()
+      .references(() => googleAnalyticsProperties.id, { onDelete: "set null" }),
     createdAt: d
       .timestamp({ withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
-  (t) => [index("chat_user_id_idx").on(t.userId)],
+  (t) => [
+    index("chat_user_id_idx").on(t.userId),
+    index("chat_selected_ga_property_id_idx").on(t.selectedGaPropertyId),
+  ],
 );
 
 export const chatsRelations = relations(chats, ({ one }) => ({
   user: one(users, { fields: [chats.userId], references: [users.id] }),
+  selectedGaProperty: one(googleAnalyticsProperties, {
+    fields: [chats.selectedGaPropertyId],
+    references: [googleAnalyticsProperties.id],
+  }),
 }));
 
 export const accounts = createTable(

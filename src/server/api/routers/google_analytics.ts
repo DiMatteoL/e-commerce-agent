@@ -1,9 +1,18 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "@/server/api/trpc";
 import { db } from "@/server/db";
-import { googleAnalyticsProperties } from "@/server/db/schema";
+import {
+  googleAnalyticsAccounts,
+  googleAnalyticsProperties,
+} from "@/server/db/schema";
+import { listAccountsWithPropertiesAndStreams } from "@/server/google/properties";
+import { persistGaAccountsAndPropertiesIfMissing } from "@/server/google/persist";
 
 export const googleAnalyticsRouter = createTRPCRouter({
   selectProperty: protectedProcedure
@@ -38,6 +47,65 @@ export const googleAnalyticsRouter = createTRPCRouter({
         return updateRes[0];
       });
 
+      if (!result) {
+        throw new Error("FAILED_TO_SELECT_PROPERTY");
+      }
+
       return { ok: true, selectedId: result.id };
     }),
+  getSelectedProperty: publicProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session?.user?.id;
+    if (!userId) {
+      return {
+        userConnected: false,
+        property: null as null | {
+          propertyDisplayName: string | null;
+          propertyResourceName: string;
+          accountDisplayName: string | null;
+        },
+      };
+    }
+
+    const rows = await db
+      .select({
+        propertyDisplayName: googleAnalyticsProperties.propertyDisplayName,
+        propertyResourceName: googleAnalyticsProperties.propertyResourceName,
+        accountDisplayName: googleAnalyticsAccounts.accountDisplayName,
+      })
+      .from(googleAnalyticsProperties)
+      .innerJoin(
+        googleAnalyticsAccounts,
+        eq(googleAnalyticsProperties.accountId, googleAnalyticsAccounts.id),
+      )
+      .where(
+        and(
+          eq(googleAnalyticsProperties.userId, userId),
+          eq(googleAnalyticsProperties.selected, true),
+        ),
+      )
+      .limit(1);
+
+    const row = rows[0];
+    if (!row) {
+      return { userConnected: true, property: null };
+    }
+
+    return {
+      userConnected: true,
+      property: row,
+    };
+  }),
+  listAccounts: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    try {
+      const accounts = await listAccountsWithPropertiesAndStreams(userId);
+      // Persist to DB to ensure properties exist for selection
+      await persistGaAccountsAndPropertiesIfMissing(userId, accounts);
+      return accounts;
+    } catch (_err) {
+      // If user is disconnected from Google or an API error occurs, return empty array
+      return [] as const;
+    }
+  }),
 });

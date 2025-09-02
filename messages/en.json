@@ -29,5 +29,13 @@
       "cartAbandonment": "I'm seeing high cart abandonment rates in my Google Analytics. What optimizations can I implement to improve this?",
       "trafficSources": "Which traffic sources are performing best for my e-commerce conversions, and how can I optimize underperforming channels?"
     }
+  },
+  "TeamSwitcher": {
+    "pickYourProject": "Pick your project",
+    "onGoogleAnalytics": "On Google Analytics"
+  },
+  "GA4OnboardingDialog": {
+    "title": "Pick your Google Analytics project",
+    "description": "Pick the project you want the agent to help you with. You can adjust your choice later."
   }
 }

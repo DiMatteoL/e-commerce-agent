@@ -29,5 +29,13 @@
       "cartAbandonment": "Je constate des taux élevés d'abandon de panier dans mes Google Analytics. Quelles optimisations puis-je mettre en place pour améliorer cela ?",
       "trafficSources": "Quelles sources de trafic performent le mieux pour mes conversions e-commerce, et comment puis-je optimiser les canaux sous-performants ?"
     }
+  },
+  "TeamSwitcher": {
+    "pickYourProject": "Choisissez votre projet",
+    "onGoogleAnalytics": "Sur Google Analytics"
+  },
+  "GA4OnboardingDialog": {
+    "title": "Choisissez votre projet Google Analytics",
+    "description": "Choisissez le projet avec lequel vous souhaitez que l’agent vous aide. Vous pourrez ajuster votre choix plus tard."
   }
 }

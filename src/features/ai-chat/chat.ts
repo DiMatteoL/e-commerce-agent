@@ -1,4 +1,5 @@
 import { calculatorTool } from "@/features/ai-chat/tools/operate";
+import { gaRunReportTool } from "@/features/ai-chat/tools/google-analytics";
 import { ChatAnthropic } from "@langchain/anthropic";
 
 import type { Message as VercelChatMessage } from "ai";
@@ -8,7 +9,7 @@ import {
   SystemMessage,
 } from "@langchain/core/messages";
 
-const SYSTEM_PROMPT = `You are an expert Google Analytics (GA) Optimization Agent specialized in e-commerce platforms. Your primary role is to analyze GA data and provide actionable advice on optimizations to boost metrics like traffic, conversions, revenue, and user engagement. Base all recommendations on GA4 best practices, including enhanced e-commerce tracking, conversion funnels, audience segmentation, and behavior flow analysis.
+const SYSTEM_PROMPT = `You are an expert Google Analytics (GA) Optimization Agent specialized in e-commerce platforms. Your primary role is to analyze GA data and provide actionable advice on optimizations to boost metrics like traffic, conversions, revenue, and user engagement. Base all recommendations on Google Analytics best practices, including enhanced e-commerce tracking, conversion funnels, audience segmentation, and behavior flow analysis.
 Key Guidelines:
 - Always reference current GA metrics and features as of ${new Date().toLocaleDateString()}, and advise users to verify data in their own GA dashboard.
 - Start responses by asking 2-3 clarifying questions about the user's e-commerce platform (e.g., Shopify, WooCommerce), business goals (e.g., increase sales by 20%), specific GA challenges (e.g., high bounce rates), and available data (e.g., sessions, conversion rates over the past month).
@@ -37,7 +38,7 @@ export const llm = new ChatAnthropic({
   temperature: 0.1,
 });
 
-export const llmWithTools = llm.bindTools([calculatorTool]);
+export const llmWithTools = llm.bindTools([gaRunReportTool]);
 
 interface UserInfo {
   id: string;
@@ -46,19 +47,38 @@ interface UserInfo {
   image?: string | null;
 }
 
+export interface SelectedGaPropertyContext {
+  propertyDisplayName: string | null;
+  propertyResourceName: string;
+  accountDisplayName: string | null;
+}
+
 export async function chatStream(
   messages: VercelChatMessage[],
   userInfo?: UserInfo,
+  selectedGa?: SelectedGaPropertyContext,
 ) {
   const langchainMessages = messages.map(formatMessage);
 
   // Create personalized system prompt if user is authenticated
-  const systemPrompt = userInfo
+  let systemPrompt = userInfo
     ? `${SYSTEM_PROMPT}
 
 You are currently assisting ${userInfo.name ?? "a user"} (User ID: ${userInfo.id}${userInfo.email ? `, Email: ${userInfo.email}` : ""}).
 Personalize your responses when appropriate and feel free to reference the user by name in a natural, friendly way.`
     : SYSTEM_PROMPT;
+
+  if (selectedGa) {
+    const propertyLabel =
+      selectedGa.propertyDisplayName ?? selectedGa.propertyResourceName;
+    const accountLabel = selectedGa.accountDisplayName ?? "Unknown account";
+    systemPrompt += `
+
+Google Analytics Context:
+- Selected Property: ${propertyLabel}
+- Account: ${accountLabel}
+Assume questions refer to this property. If the user asks about a different property, you must suggest to switch to the selected property.`;
+  }
 
   // Add system message at the beginning
   const allMessages = [new SystemMessage(systemPrompt), ...langchainMessages];
