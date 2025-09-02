@@ -1,6 +1,6 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { analyticsdata_v1beta } from "googleapis";
+import { type analyticsdata_v1beta } from "googleapis";
 import { and, eq } from "drizzle-orm";
 
 import { getAnalyticsDataClient } from "@/server/google/client";
@@ -79,6 +79,84 @@ const dateRangeSchema = z.object({
   endDate: z.string().min(1),
 });
 
+// --- New: metadata preflight and aliasing to prevent invalid fields ---
+const MD_TTL_MS = 5 * 60_000; // 5 minutes
+const metadataCache = new Map<
+  string,
+  { dims: Set<string>; mets: Set<string>; expiresAt: number }
+>();
+
+function parsePropertyIdFromResource(resourceName: string): string {
+  // resourceName is like "properties/123456"
+  const parts = resourceName.split("/");
+  return parts[1] ?? resourceName;
+}
+
+function applyAlias(name: string): string {
+  const map: Record<string, string> = {
+    // common aliases → GA4 canonical names
+    productName: "itemName",
+    productId: "itemId",
+    productsViewed: "itemsViewed",
+    itemViews: "itemsViewed",
+    revenue: "totalRevenue",
+    orders: "purchases",
+    transactions: "purchases",
+    transaction: "purchases",
+  };
+  return map[name] ?? name;
+}
+
+async function getPropertyMetadataSets(
+  dataClient: analyticsdata_v1beta.Analyticsdata,
+  propertyResourceName: string,
+): Promise<{ dims: Set<string>; mets: Set<string> }> {
+  const pid = parsePropertyIdFromResource(propertyResourceName);
+  const now = Date.now();
+  const cached = metadataCache.get(pid);
+  if (cached && cached.expiresAt > now)
+    return { dims: cached.dims, mets: cached.mets };
+
+  // Using properties.getMetadata to fetch available fields
+  const { data } = await (dataClient as any).properties.getMetadata({
+    name: `properties/${pid}/metadata`,
+  });
+  const dims = new Set<string>(
+    (data.dimensions ?? []).map((d: any) => d.apiName).filter(Boolean),
+  );
+  const mets = new Set<string>(
+    (data.metrics ?? []).map((m: any) => m.apiName).filter(Boolean),
+  );
+  metadataCache.set(pid, { dims, mets, expiresAt: now + MD_TTL_MS });
+  return { dims, mets };
+}
+
+function sanitizeFields(
+  requested: string[] | undefined,
+  available: Set<string>,
+  aliasFirstChoices: string[] = [],
+): { kept: string[]; warnings: string[] } {
+  const kept: string[] = [];
+  const warnings: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of requested ?? []) {
+    const candidate = applyAlias(raw);
+    if (available.has(candidate) && !seen.has(candidate)) {
+      kept.push(candidate);
+      seen.add(candidate);
+    } else {
+      warnings.push(`Dropped unknown field: ${raw}`);
+    }
+  }
+  // If none kept and we have suggested fallbacks, use first valid
+  for (const alt of aliasFirstChoices) {
+    if (kept.length > 0) break;
+    const cand = applyAlias(alt);
+    if (available.has(cand)) kept.push(cand);
+  }
+  return { kept, warnings };
+}
+
 export const gaRunReportTool = tool(
   async ({
     propertyId,
@@ -97,16 +175,49 @@ export const gaRunReportTool = tool(
       propertyId,
     );
 
+    const dataClient = await getAnalyticsDataClient(userId);
+
+    // Preflight metadata
+    const { dims: availableDims, mets: availableMets } =
+      await getPropertyMetadataSets(dataClient, propertyResourceName);
+
+    const dimSan = sanitizeFields(dimensions, availableDims, ["itemName"]);
+    const metSan = sanitizeFields(metrics, availableMets, [
+      "purchases",
+      "itemRevenue",
+      "totalRevenue",
+      "activeUsers",
+    ]);
+
+    const warnings: string[] = [...dimSan.warnings, ...metSan.warnings];
+
+    if (metSan.kept.length === 0) {
+      throw new Error(
+        `NO_VALID_METRICS. Available examples include: purchases, totalRevenue, itemRevenue, activeUsers. Requested: ${metrics.join(", ")}`,
+      );
+    }
+
+    // Ensure orderBy refers to a kept metric
+    let effectiveOrderBy = orderBy;
+    if (orderBy && !metSan.kept.includes(applyAlias(orderBy.metric))) {
+      warnings.push(`Removed orderBy on unknown metric: ${orderBy.metric}`);
+      effectiveOrderBy = undefined;
+    }
+
+    // Build request
     const requestBody: analyticsdata_v1beta.Schema$RunReportRequest = {
       dateRanges: [dateRange],
-      dimensions: (dimensions ?? []).map((name) => ({ name })),
-      metrics: metrics.map((name) => ({ name })),
+      dimensions: (dimSan.kept ?? []).map((name) => ({ name })),
+      metrics: metSan.kept.map((name) => ({ name })),
       limit: String(Math.min(Math.max(limit ?? 1, 1), 1000)),
     };
 
-    if (orderBy) {
+    if (effectiveOrderBy) {
       requestBody.orderBys = [
-        { metric: { metricName: orderBy.metric }, desc: !!orderBy.desc },
+        {
+          metric: { metricName: applyAlias(effectiveOrderBy.metric) },
+          desc: !!effectiveOrderBy.desc,
+        },
       ];
     }
 
@@ -116,11 +227,31 @@ export const gaRunReportTool = tool(
     const cached = getCached(cacheKey);
     if (cached) return cached;
 
-    const dataClient = await getAnalyticsDataClient(userId);
-    const { data } = await dataClient.properties.runReport({
-      property: propertyResourceName,
-      requestBody,
-    });
+    // Execute with safe fallback on common errors
+    let data;
+    try {
+      ({ data } = await dataClient.properties.runReport({
+        property: propertyResourceName,
+        requestBody,
+      }));
+    } catch (err) {
+      // Fallback: drop dimensions and try a single safe ecommerce metric
+      const fallbackMetric = metSan.kept.includes("purchases")
+        ? "purchases"
+        : metSan.kept[0];
+      warnings.push(
+        `FALLBACK_APPLIED due to API error. Retrying with dimensions=[] and metric=${fallbackMetric}.`,
+      );
+      ({ data } = await dataClient.properties.runReport({
+        property: propertyResourceName,
+        requestBody: {
+          dateRanges: [dateRange],
+          dimensions: [],
+          metrics: [{ name: fallbackMetric }],
+          limit: requestBody.limit,
+        },
+      }));
+    }
 
     const headers = [
       ...(data.dimensionHeaders?.map((h) => h.name ?? "") ?? []),
@@ -138,6 +269,7 @@ export const gaRunReportTool = tool(
       rowCount: data.rowCount ?? rows.length,
       propertyResourceName,
       dateRange,
+      warnings: warnings.length > 0 ? warnings : undefined,
     };
 
     const result = JSON.stringify(normalized);
