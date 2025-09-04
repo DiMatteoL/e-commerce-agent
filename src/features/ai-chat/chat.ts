@@ -1,13 +1,11 @@
 import type { Message as VercelChatMessage } from "ai";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
-import { tools, toolByName } from "@/features/ai-chat/tools/registry";
-import { createLLM, bindTools } from "@/features/ai-chat/llm/client";
 import {
   buildSystemPrompt,
   type UserInfo,
   type SelectedGaPropertyContext,
 } from "@/features/ai-chat/prompts/system";
-import { toolAwareChunkLoop } from "@/features/ai-chat/stream/chunk-loop";
+import { ModelStream } from "@/features/ai-chat/stream/chunk-loop";
 
 export type { SelectedGaPropertyContext } from "@/features/ai-chat/prompts/system";
 
@@ -21,14 +19,9 @@ export async function chatStream(
   const lcMessages = messages.map(formatMessage);
   const systemPrompt = buildSystemPrompt(userInfo, selectedGa, MAX_TOOL_ROUNDS);
 
-  const llm = createLLM();
-  const llmWithTools = bindTools(llm, tools);
-
-  return toolAwareChunkLoop({
-    llmWithTools,
+  return ModelStream({
     systemPrompt,
     messages: lcMessages,
-    toolsByName: toolByName,
     maxToolRounds: MAX_TOOL_ROUNDS,
   });
 }

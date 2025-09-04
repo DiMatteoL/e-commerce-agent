@@ -21,7 +21,6 @@ export type Ga4AccountSummary = {
 };
 
 const RESOURCE_SEPARATOR = "/" as const;
-const DATA_STREAMS_SEGMENT = "dataStreams" as const;
 
 export async function listAccountsWithPropertiesAndStreams(userId: string) {
   const admin = await getAnalyticsAdminClient(userId);

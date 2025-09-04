@@ -5,10 +5,11 @@ import {
   ToolMessage,
   type AIMessageChunk,
   type AIMessageFields,
+  type BaseMessageLike,
 } from "@langchain/core/messages";
-import type { StructuredTool } from "@langchain/core/tools";
 import type { ToolCall as LCToolCall } from "@langchain/core/messages/tool";
-import type { ToolBoundLLM } from "@/features/ai-chat/llm/client";
+import { tools, toolByName } from "@/features/ai-chat/tools/registry";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 function extractChunkText(chunk: AIMessageChunk): string | undefined {
   const c = chunk.content as unknown;
@@ -56,27 +57,32 @@ function safeParse(input: string): Record<string, unknown> | undefined {
 
 export type StreamToken = { content: string };
 
-export async function* toolAwareChunkLoop(options: {
-  llmWithTools: ToolBoundLLM;
+export async function* ModelStream({
+  systemPrompt,
+  messages,
+  maxToolRounds = 5,
+}: {
   systemPrompt: string;
-  messages: Array<
-    AIMessage | SystemMessage | ToolMessage | { _getType: () => string }
-  >;
-  toolsByName: Map<string, StructuredTool>;
+  messages: BaseMessageLike[];
   maxToolRounds?: number;
 }): AsyncGenerator<StreamToken> {
-  const { llmWithTools, systemPrompt, messages, toolsByName } = options;
-  const MAX_TOOL_ROUNDS = options.maxToolRounds ?? 3;
+  const llm = new ChatAnthropic({
+    model: "claude-sonnet-4-20250514",
+    temperature: 0.1,
+  });
+  const llmWithTools = llm.bindTools(tools);
 
-  const workingMessages: Array<
-    AIMessage | SystemMessage | ToolMessage | { _getType: () => string }
-  > = [new SystemMessage(systemPrompt), ...messages];
+  const workingMessages: BaseMessageLike[] = [
+    new SystemMessage(systemPrompt),
+    ...messages,
+  ];
 
   async function* orchestrate() {
-    for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+    for (let round = 0; round < maxToolRounds; round++) {
       let gathered: AIMessageChunk | undefined = undefined;
       let textBuffer = "";
-      const stream = await llmWithTools.stream(workingMessages as unknown[]);
+
+      const stream = await llmWithTools.stream(workingMessages);
 
       for await (const chunk of stream) {
         const text = extractChunkText(chunk);
@@ -101,7 +107,7 @@ export async function* toolAwareChunkLoop(options: {
 
       console.log("calling tools", calls);
       for (const call of calls) {
-        const tool = toolsByName.get(call.name);
+        const tool = toolByName.get(call.name);
         if (!tool) {
           const errPayload = JSON.stringify({
             error: "UNKNOWN_TOOL",

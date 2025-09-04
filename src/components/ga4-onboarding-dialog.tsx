@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -61,6 +62,7 @@ export function Ga4OnboardingDialog({
   projectId,
 }: Ga4OnboardingDialogProps) {
   const t = useTranslations("GA4OnboardingDialog");
+  const router = useRouter();
   const [selectedProperty, setSelectedProperty] = React.useState<string | null>(
     null,
   );
@@ -88,7 +90,10 @@ export function Ga4OnboardingDialog({
         propertyResourceName: selectedProperty,
       });
       await utils.google_analytics.getSelectedProperty.invalidate();
+      await utils.user.getUserWithChats.invalidate();
       onOpenChange?.(false);
+      router.replace("/");
+      router.refresh();
     } catch (err) {
       console.error(err);
     } finally {

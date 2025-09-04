@@ -24,7 +24,6 @@ export async function persistGaAccountsAndPropertiesIfMissing(
   for (const acc of existingAccounts)
     accountResourceToId.set(acc.accountResourceName, acc.id);
 
-  const allAccountResources = accounts.map((a) => a.accountResourceName);
   const missingAccounts = accounts.filter(
     (a) => !accountResourceToId.has(a.accountResourceName),
   );
