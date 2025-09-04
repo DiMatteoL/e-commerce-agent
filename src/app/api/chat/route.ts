@@ -4,18 +4,19 @@ import type { Message as VercelChatMessage } from "ai";
 import { chatStream } from "@/features/ai-chat/chat";
 import { saveChat } from "@/features/ai-chat/save-chat";
 import { auth } from "@/server/auth";
+import { db } from "@/server/db";
+import {
+  googleAnalyticsAccounts,
+  googleAnalyticsProperties,
+} from "@/server/db/schema";
+import { and, eq } from "drizzle-orm";
 
-/**
- * This handler uses LangChain Anthropic with streaming response
- * Compatible with the chat-window.tsx frontend expectations
- */
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as {
       messages?: VercelChatMessage[];
       id?: string;
     };
-    console.log("body", body);
     const messages = body.messages ?? [];
     const chatId = body.id;
 
@@ -33,8 +34,41 @@ export async function POST(req: NextRequest) {
         }
       : undefined;
 
-    // Create the stream with user context
-    const stream = await chatStream(messages, userInfo);
+    // Fetch selected GA property for the user if available
+    let selectedGa:
+      | {
+          id: number;
+          propertyDisplayName: string | null;
+          propertyResourceName: string;
+          accountDisplayName: string | null;
+        }
+      | undefined = undefined;
+
+    if (userId) {
+      const rows = await db
+        .select({
+          id: googleAnalyticsProperties.id,
+          propertyDisplayName: googleAnalyticsProperties.propertyDisplayName,
+          propertyResourceName: googleAnalyticsProperties.propertyResourceName,
+          accountDisplayName: googleAnalyticsAccounts.accountDisplayName,
+        })
+        .from(googleAnalyticsProperties)
+        .innerJoin(
+          googleAnalyticsAccounts,
+          eq(googleAnalyticsProperties.accountId, googleAnalyticsAccounts.id),
+        )
+        .where(
+          and(
+            eq(googleAnalyticsProperties.userId, userId),
+            eq(googleAnalyticsProperties.selected, true),
+          ),
+        )
+        .limit(1);
+      selectedGa = rows[0] ?? undefined;
+    }
+
+    // Create the stream with user and GA context
+    const stream = await chatStream(messages, userInfo, selectedGa);
 
     // Collect the complete assistant response
     let assistantResponse = "";
@@ -63,6 +97,14 @@ export async function POST(req: NextRequest) {
               userId,
               messages,
               assistantResponse,
+              selectedGa: selectedGa
+                ? {
+                    id: selectedGa.id,
+                    propertyDisplayName: selectedGa.propertyDisplayName,
+                    propertyResourceName: selectedGa.propertyResourceName,
+                    accountDisplayName: selectedGa.accountDisplayName,
+                  }
+                : undefined,
             });
 
             const redirectData = JSON.stringify({

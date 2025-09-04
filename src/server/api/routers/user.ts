@@ -1,7 +1,7 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
-import { users, chats } from "@/server/db/schema";
+import { users, chats, googleAnalyticsProperties } from "@/server/db/schema";
 import type { Chat } from "./chat";
 
 export const userRouter = createTRPCRouter({
@@ -33,15 +33,36 @@ export const userRouter = createTRPCRouter({
       }
 
       // Get user's chats ordered by creation date (newest first)
-      const userChats = await ctx.db
-        .select({
-          id: chats.id,
-          payload: chats.payload,
-          createdAt: chats.createdAt,
-        })
-        .from(chats)
-        .where(eq(chats.userId, ctx.session.user.id))
-        .orderBy(desc(chats.createdAt));
+      // First, get the user's currently selected GA property id
+      const selected = await ctx.db
+        .select({ id: googleAnalyticsProperties.id })
+        .from(googleAnalyticsProperties)
+        .where(
+          and(
+            eq(googleAnalyticsProperties.userId, ctx.session.user.id),
+            eq(googleAnalyticsProperties.selected, true),
+          ),
+        )
+        .limit(1);
+
+      const selectedId = selected[0]?.id;
+
+      const userChats = selectedId
+        ? await ctx.db
+            .select({
+              id: chats.id,
+              payload: chats.payload,
+              createdAt: chats.createdAt,
+            })
+            .from(chats)
+            .where(
+              and(
+                eq(chats.userId, ctx.session.user.id),
+                eq(chats.selectedGaPropertyId, selectedId),
+              ),
+            )
+            .orderBy(desc(chats.createdAt))
+        : [];
 
       // Extract chat titles and IDs
       const chatTitles = userChats.map((chat) => {

@@ -9,6 +9,12 @@ export interface SaveChatParams {
   userId?: string;
   messages: VercelChatMessage[];
   assistantResponse: string;
+  selectedGa?: {
+    id?: number; // id of google_analytics_property if available
+    propertyDisplayName: string | null;
+    propertyResourceName: string;
+    accountDisplayName: string | null;
+  };
 }
 
 export async function saveChat({
@@ -16,6 +22,7 @@ export async function saveChat({
   userId,
   messages,
   assistantResponse,
+  selectedGa,
 }: SaveChatParams): Promise<string> {
   // Generate ID if not provided
   const id = chatId ?? nanoid();
@@ -29,6 +36,14 @@ export async function saveChat({
     title,
     userId: userId ?? null,
     createdAt: createdAt.toISOString(),
+    gaContext: selectedGa
+      ? {
+          id: selectedGa.id ?? null,
+          propertyDisplayName: selectedGa.propertyDisplayName,
+          propertyResourceName: selectedGa.propertyResourceName,
+          accountDisplayName: selectedGa.accountDisplayName,
+        }
+      : null,
     messages: [
       ...messages,
       {
@@ -45,12 +60,14 @@ export async function saveChat({
       id,
       userId: userId ?? null,
       payload,
+      selectedGaPropertyId: selectedGa?.id ?? null,
       createdAt,
     })
     .onConflictDoUpdate({
       target: chats.id,
       set: {
         payload,
+        selectedGaPropertyId: selectedGa?.id ?? null,
         updatedAt: new Date(),
       },
     });

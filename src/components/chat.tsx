@@ -1,7 +1,7 @@
 "use client";
 
 import { type Message } from "ai";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocale } from "next-intl";
 
@@ -26,6 +26,13 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState(id);
+  const [isThinking, setIsThinking] = useState(false);
+
+  useEffect(() => {
+    if (isLoading) {
+      setIsThinking(true);
+    }
+  }, [isLoading]);
 
   const setInputWrapper = (value: string | ((prev: string) => string)) => {
     if (typeof value === "function") {
@@ -63,6 +70,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       if (response.status === 401) {
         toast.error(response.statusText);
         setIsLoading(false);
+        setIsThinking(false);
         return;
       }
 
@@ -103,6 +111,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
                   chatId?: string;
                 };
                 if (parsed.type === "text" && parsed.content) {
+                  if (isThinking) setIsThinking(false);
                   assistantMessage.content += parsed.content;
                   setMessages((prev) => {
                     const newMessages = [...prev];
@@ -142,6 +151,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       });
     } finally {
       setIsLoading(false);
+      setIsThinking(false);
     }
   };
 
@@ -167,6 +177,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
 
   const handleStop = () => {
     setIsLoading(false);
+    setIsThinking(false);
   };
 
   const append = async (
