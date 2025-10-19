@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
+import { analyticsadmin_v1beta } from "googleapis";
 
 import {
   createTRPCRouter,
@@ -8,14 +9,19 @@ import {
 } from "@/server/api/trpc";
 import { db } from "@/server/db";
 import {
+  accounts,
   googleAnalyticsAccounts,
   googleAnalyticsProperties,
 } from "@/server/db/schema";
 import { listAccountsWithPropertiesAndStreams } from "@/server/google/properties";
 import { persistGaAccountsAndPropertiesIfMissing } from "@/server/google/persist";
 import { TRPCError } from "@trpc/server";
-import { GoogleOAuthRequired } from "@/server/google/client";
+import {
+  GoogleOAuthRequired,
+  getGoogleOAuthClientForUser,
+} from "@/server/google/client";
 import { handleGoogleOAuthError } from "@/server/api/errors";
+import { checkGoogleConnectionHealth } from "@/server/google/status";
 
 export const googleAnalyticsRouter = createTRPCRouter({
   selectProperty: protectedProcedure
@@ -168,5 +174,64 @@ export const googleAnalyticsRouter = createTRPCRouter({
         cause: err as Error,
       });
     }
+  }),
+
+  /**
+   * Check Google account connection health
+   * Returns status without making external API calls
+   */
+  getConnectionStatus: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+    const health = await checkGoogleConnectionHealth(userId);
+    return health;
+  }),
+
+  /**
+   * Test Google connection by making a lightweight API call
+   * This actually validates that the credentials work
+   */
+  testConnection: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    try {
+      // Try to get the OAuth client - this will attempt token refresh if needed
+      const client = await getGoogleOAuthClientForUser(userId);
+
+      // Make a lightweight API call to verify credentials
+      const analyticsAdmin = new analyticsadmin_v1beta.Analyticsadmin({
+        auth: client,
+      });
+
+      // List account summaries is a lightweight call
+      await analyticsAdmin.accountSummaries.list({ pageSize: 1 });
+
+      return {
+        success: true,
+        message: "Google connection is working",
+      };
+    } catch (err) {
+      if (err instanceof GoogleOAuthRequired) {
+        handleGoogleOAuthError(err);
+      }
+
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : "Connection test failed",
+      };
+    }
+  }),
+
+  /**
+   * Force disconnect Google account
+   * Useful for testing and user-initiated disconnection
+   */
+  disconnectGoogle: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    await db
+      .delete(accounts)
+      .where(and(eq(accounts.userId, userId), eq(accounts.provider, "google")));
+
+    return { success: true };
   }),
 });
