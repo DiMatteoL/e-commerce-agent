@@ -15,6 +15,7 @@ import { listAccountsWithPropertiesAndStreams } from "@/server/google/properties
 import { persistGaAccountsAndPropertiesIfMissing } from "@/server/google/persist";
 import { TRPCError } from "@trpc/server";
 import { GoogleOAuthRequired } from "@/server/google/client";
+import { handleGoogleOAuthError } from "@/server/api/errors";
 
 export const googleAnalyticsRouter = createTRPCRouter({
   selectProperty: protectedProcedure
@@ -106,14 +107,9 @@ export const googleAnalyticsRouter = createTRPCRouter({
       await persistGaAccountsAndPropertiesIfMissing(userId, accounts);
       return accounts;
     } catch (err) {
-      // Not connected to Google via NextAuth
+      // Handle OAuth errors with full metadata preservation
       if (err instanceof GoogleOAuthRequired) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message:
-            "Google account not connected. Please connect your Google account to continue.",
-          cause: err,
-        });
+        handleGoogleOAuthError(err);
       }
 
       // Best-effort classification of googleapis errors

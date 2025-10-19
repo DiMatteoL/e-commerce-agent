@@ -14,11 +14,25 @@ const NEXTAUTH_SIGNIN_PATH = "/api/auth/signin" as const;
 const DEFAULT_CALLBACK_URL = "/" as const;
 const ERROR_CODE_NEEDS_GOOGLE_OAUTH = "NEEDS_GOOGLE_OAUTH" as const;
 const TOKEN_REFRESH_SKEW_MS = 60_000; // 1 minute skew
+const REQUIRED_SCOPES = [
+  "https://www.googleapis.com/auth/analytics.readonly",
+] as const;
+
+export enum GoogleAuthErrorReason {
+  NO_ACCOUNT = "NO_ACCOUNT",
+  MISSING_SCOPES = "MISSING_SCOPES",
+  TOKEN_EXPIRED = "TOKEN_EXPIRED",
+  REFRESH_FAILED = "REFRESH_FAILED",
+  TOKEN_REVOKED = "TOKEN_REVOKED",
+}
 
 export type NeedsGoogleOAuthError = {
   code: typeof ERROR_CODE_NEEDS_GOOGLE_OAUTH;
+  reason: GoogleAuthErrorReason;
   message: string;
+  userMessage: string;
   authorizeUrl: string;
+  canRetry: boolean;
 };
 
 function buildAuthorizeUrl(callbackUrl: string = DEFAULT_CALLBACK_URL) {
@@ -29,24 +43,85 @@ function buildAuthorizeUrl(callbackUrl: string = DEFAULT_CALLBACK_URL) {
   return `${NEXTAUTH_SIGNIN_PATH}?${params.toString()}`;
 }
 
+function getErrorMessages(reason: GoogleAuthErrorReason): {
+  message: string;
+  userMessage: string;
+  canRetry: boolean;
+} {
+  switch (reason) {
+    case GoogleAuthErrorReason.NO_ACCOUNT:
+      return {
+        message: "No Google account connected",
+        userMessage:
+          "Please connect your Google account to access Google Analytics features.",
+        canRetry: false,
+      };
+    case GoogleAuthErrorReason.MISSING_SCOPES:
+      return {
+        message: "Missing required Google Analytics scopes",
+        userMessage:
+          "Additional permissions are required. Please reconnect your Google account.",
+        canRetry: false,
+      };
+    case GoogleAuthErrorReason.TOKEN_EXPIRED:
+      return {
+        message: "Access token expired and no refresh token available",
+        userMessage:
+          "Your Google connection has expired. Please reconnect to continue.",
+        canRetry: false,
+      };
+    case GoogleAuthErrorReason.REFRESH_FAILED:
+      return {
+        message: "Failed to refresh access token",
+        userMessage:
+          "Unable to refresh your Google connection. Please reconnect your account.",
+        canRetry: false,
+      };
+    case GoogleAuthErrorReason.TOKEN_REVOKED:
+      return {
+        message: "Refresh token has been revoked",
+        userMessage:
+          "Your Google connection was revoked. Please reconnect to restore access.",
+        canRetry: false,
+      };
+    default:
+      return {
+        message: "Google authentication required",
+        userMessage: "Please connect your Google account to continue.",
+        canRetry: false,
+      };
+  }
+}
+
 export class GoogleOAuthRequired extends Error {
   code: NeedsGoogleOAuthError["code"] = ERROR_CODE_NEEDS_GOOGLE_OAUTH;
+  reason: GoogleAuthErrorReason;
   authorizeUrl: string;
+  userMessage: string;
+  canRetry: boolean;
 
   constructor(
-    message = "Connect Google to use GA4 tools.",
+    reason: GoogleAuthErrorReason,
+    technicalMessage?: string,
     authorizeUrl?: string,
   ) {
-    super(message);
+    const { message, userMessage, canRetry } = getErrorMessages(reason);
+    super(technicalMessage ?? message);
     this.name = "GoogleOAuthRequired";
+    this.reason = reason;
+    this.userMessage = userMessage;
     this.authorizeUrl = authorizeUrl ?? buildAuthorizeUrl();
+    this.canRetry = canRetry;
   }
 
   toJSON(): NeedsGoogleOAuthError {
     return {
       code: this.code,
+      reason: this.reason,
       message: this.message,
+      userMessage: this.userMessage,
       authorizeUrl: this.authorizeUrl,
+      canRetry: this.canRetry,
     };
   }
 }
@@ -64,7 +139,18 @@ export async function getGoogleOAuthClientForUser(userId: string) {
     );
 
   if (!account) {
-    throw new GoogleOAuthRequired();
+    throw new GoogleOAuthRequired(GoogleAuthErrorReason.NO_ACCOUNT);
+  }
+
+  function hasAllRequiredScopes(scope?: string | null) {
+    if (!scope) return false;
+    const granted = new Set(scope.split(/\s+/).filter(Boolean));
+    return REQUIRED_SCOPES.every((s) => granted.has(s));
+  }
+
+  // If required scopes are missing, force re-consent
+  if (!hasAllRequiredScopes(account.scope)) {
+    throw new GoogleOAuthRequired(GoogleAuthErrorReason.MISSING_SCOPES);
   }
 
   const oauth2 = new google.auth.OAuth2({
@@ -88,6 +174,11 @@ export async function getGoogleOAuthClientForUser(userId: string) {
     !account.access_token ||
     (expiryMs && expiryMs - nowMs < TOKEN_REFRESH_SKEW_MS);
 
+  // If we need a refresh but have no refresh token, require reconnect
+  if (needsRefresh && !account.refresh_token) {
+    throw new GoogleOAuthRequired(GoogleAuthErrorReason.TOKEN_EXPIRED);
+  }
+
   if (needsRefresh && account.refresh_token) {
     try {
       const { credentials } = await oauth2.refreshAccessToken();
@@ -100,11 +191,13 @@ export async function getGoogleOAuthClientForUser(userId: string) {
       const newExpiresAt = credentials.expiry_date
         ? Math.floor(credentials.expiry_date / 1000)
         : null;
+      const newRefreshToken = credentials.refresh_token ?? null;
 
       await db
         .update(accounts)
         .set({
           access_token: newAccessToken,
+          refresh_token: newRefreshToken ?? undefined,
           id_token: newIdToken,
           scope: newScope,
           token_type: newTokenType,
@@ -127,9 +220,21 @@ export async function getGoogleOAuthClientForUser(userId: string) {
         token_type: credentials.token_type,
         expiry_date: credentials.expiry_date,
       });
-    } catch (_) {
-      throw new Error(
-        "Failed to refresh Google access token. Please reconnect Google to continue.",
+    } catch (err) {
+      // If refresh fails (e.g., invalid_grant, revoked), require reconnect
+      // Classify error type for better user messaging
+      const error = err as {
+        response?: { data?: { error?: string } };
+        message?: string;
+      };
+      const errorCode = error?.response?.data?.error;
+      const isRevoked = errorCode === "invalid_grant";
+
+      throw new GoogleOAuthRequired(
+        isRevoked
+          ? GoogleAuthErrorReason.TOKEN_REVOKED
+          : GoogleAuthErrorReason.REFRESH_FAILED,
+        error?.message,
       );
     }
   }
