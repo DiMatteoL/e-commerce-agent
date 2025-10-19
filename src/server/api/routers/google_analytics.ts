@@ -22,6 +22,7 @@ import {
 } from "@/server/google/client";
 import { handleGoogleOAuthError } from "@/server/api/errors";
 import { checkGoogleConnectionHealth } from "@/server/google/status";
+import { reconcileGoogleAccount } from "@/server/google/reconnect";
 
 export const googleAnalyticsRouter = createTRPCRouter({
   selectProperty: protectedProcedure
@@ -106,6 +107,10 @@ export const googleAnalyticsRouter = createTRPCRouter({
   }),
   listAccounts: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
+
+    console.log(
+      `[listAccounts] Called for user ${userId} (${ctx.session.user.email})`,
+    );
 
     try {
       const accounts = await listAccountsWithPropertiesAndStreams(userId);
@@ -233,5 +238,44 @@ export const googleAnalyticsRouter = createTRPCRouter({
       .where(and(eq(accounts.userId, userId), eq(accounts.provider, "google")));
 
     return { success: true };
+  }),
+
+  /**
+   * Verify reconnection was successful
+   * Called by frontend after OAuth flow completes
+   */
+  verifyReconnection: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    // Reconcile any duplicate accounts
+    await reconcileGoogleAccount(userId);
+
+    // Check connection health
+    const health = await checkGoogleConnectionHealth(userId);
+
+    if (!health.isHealthy) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: health.warningMessage ?? "Reconnection failed",
+      });
+    }
+
+    // Check if selected property still exists and is accessible
+    const [selectedProp] = await db
+      .select()
+      .from(googleAnalyticsProperties)
+      .where(
+        and(
+          eq(googleAnalyticsProperties.userId, userId),
+          eq(googleAnalyticsProperties.selected, true),
+        ),
+      )
+      .limit(1);
+
+    return {
+      success: true,
+      hasSelectedProperty: !!selectedProp,
+      connectionHealth: health,
+    };
   }),
 });

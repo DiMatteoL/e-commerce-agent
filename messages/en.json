@@ -38,20 +38,68 @@
     "title": "Pick your Google Analytics project",
     "description": "Pick the project you want the agent to help you with. You can adjust your choice later.",
     "error": {
+      "connectionExpired": {
+        "title": "Connection Expired",
+        "body": "Your Google Analytics connection has expired. Please reconnect to continue.",
+        "primaryCta": "Reconnect Google",
+        "reconnecting": "Reconnecting...",
+        "secondaryCta": "Cancel",
+        "finePrint": "Your selected property and settings will be preserved."
+      },
       "missingPermissions": {
         "title": "Reconnect Google Analytics to continue",
-        "body": "Your Google session has expired or the app doesn’t have permission to read your Analytics data. Please reconnect to grant read‑only access so we can fetch your GA4 properties and deliver insights to grow your store. You can disconnect anytime.",
+        "body": "Your Google session has expired or the app doesn't have permission to read your Analytics data. Please reconnect to grant read‑only access so we can fetch your GA4 properties and deliver insights to grow your store. You can disconnect anytime.",
         "finePrint": "We only request read‑only access to Google Analytics. We never edit or delete your data.",
         "primaryCta": "Reconnect Google",
         "secondaryCta": "Cancel"
       },
       "apiNotEnabled": {
         "title": "Enable Google Analytics APIs to continue",
-        "body": "Your Google Cloud project doesn’t have the required APIs enabled. Enable the Admin and Data APIs so we can read your GA4 properties and deliver insights to grow your store.",
+        "body": "Your Google Cloud project doesn't have the required APIs enabled. Enable the Admin and Data APIs so we can read your GA4 properties and deliver insights to grow your store.",
         "finePrint": "You will be redirected to Google Cloud Console to enable APIs for your project.",
         "primaryCtaAdmin": "Open Admin API",
         "primaryCtaData": "Open Data API",
         "secondaryCta": "Close"
+      }
+    }
+  },
+  "GoogleConnection": {
+    "status": {
+      "not_connected": {
+        "title": "Google Analytics Not Connected"
+      },
+      "expired": {
+        "title": "Google Connection Expired"
+      },
+      "expiring_soon": {
+        "title": "Connection Expiring Soon"
+      },
+      "missing_scopes": {
+        "title": "Additional Permissions Required"
+      },
+      "revoked": {
+        "title": "Google Access Revoked"
+      },
+      "connected": {
+        "title": "Connected"
+      }
+    },
+    "action": {
+      "reconnect": "Reconnect",
+      "reconnecting": "Reconnecting...",
+      "dismiss": "Dismiss"
+    }
+  },
+  "Settings": {
+    "GoogleConnection": {
+      "title": "Google Analytics Connection",
+      "description": "Manage your Google Analytics integration",
+      "status": {
+        "healthy": "Connected and working",
+        "unhealthy": "Connection issue detected"
+      },
+      "disconnect": {
+        "confirm": "Are you sure you want to disconnect your Google account? You'll need to reconnect to use GA4 features."
       }
     }
   }
