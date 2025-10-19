@@ -58,12 +58,11 @@ export function useReconnectGoogle() {
 
       try {
         // Try up to 3 times with exponential backoff
-        let lastError: Error | null = null;
         const maxAttempts = 3;
 
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
           try {
-            const result = await verifyMutation.mutateAsync();
+            await verifyMutation.mutateAsync();
 
             // Invalidate queries to refresh data
             await utils.google_analytics.getConnectionStatus.invalidate();
@@ -81,9 +80,7 @@ export function useReconnectGoogle() {
 
             // Success - break out of retry loop
             return;
-          } catch (err) {
-            lastError = err as Error;
-
+          } catch {
             // Don't retry on the last attempt
             if (attempt < maxAttempts - 1) {
               // Wait before retrying (1s, 2s, 3s)
@@ -102,7 +99,7 @@ export function useReconnectGoogle() {
       }
     };
 
-    verifyReconnection();
+    void verifyReconnection();
   }, [verifyMutation, utils, router]);
 
   return {

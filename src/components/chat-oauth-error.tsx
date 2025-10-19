@@ -54,8 +54,8 @@ export function ChatOAuthError({
             </Button>
           </div>
           <p className="text-muted-foreground text-xs">
-            You'll be redirected to Google to reauthorize access. Your selected
-            GA4 property and settings will be preserved.
+            You&apos;ll be redirected to Google to reauthorize access. Your
+            selected GA4 property and settings will be preserved.
           </p>
         </div>
       </div>

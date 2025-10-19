@@ -50,7 +50,7 @@ export async function refreshExpiringTokens(): Promise<{
       // This will trigger refresh if needed
       await getGoogleOAuthClientForUser(account.userId);
       refreshed++;
-    } catch (err) {
+    } catch {
       failed++;
       // Silently fail - errors will be handled when user makes API call
     }

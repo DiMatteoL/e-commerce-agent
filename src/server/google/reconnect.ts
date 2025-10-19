@@ -57,7 +57,7 @@ export async function hasValidGoogleConnection(
   // Has refresh token OR has non-expired access token
   const now = Math.floor(Date.now() / 1000);
   return !!(
-    account.refresh_token ||
+    account.refresh_token ??
     (account.expires_at && account.expires_at > now)
   );
 }

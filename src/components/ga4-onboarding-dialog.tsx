@@ -17,7 +17,6 @@ import { GoogleAccountCard } from "@/components/ga4/account-card";
 import { GooglePropertyCard } from "@/components/ga4/property-card";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { extractOAuthError } from "@/types/oauth-errors";
 import { useReconnectGoogle } from "@/hooks/use-reconnect-google";
 import { RefreshCw } from "lucide-react";
 
@@ -123,7 +122,7 @@ export function Ga4OnboardingDialog({
             {t("error.connectionExpired.title")}
           </div>
           <div className="text-muted-foreground mb-3">
-            {connectionStatus.warningMessage ||
+            {connectionStatus.warningMessage ??
               t("error.connectionExpired.body")}
           </div>
           <div className="flex items-center gap-2">

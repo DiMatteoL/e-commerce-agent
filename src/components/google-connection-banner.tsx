@@ -2,13 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import {
-  AlertCircle,
-  RefreshCw,
-  CheckCircle,
-  AlertTriangle,
-  X,
-} from "lucide-react";
+import { AlertCircle, RefreshCw, CheckCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGoogleConnectionStatus } from "@/hooks/use-google-connection-status";
 import { useReconnectGoogle } from "@/hooks/use-reconnect-google";

@@ -4,7 +4,6 @@ import { accounts } from "@/server/db/schema";
 import { GoogleAuthErrorReason } from "./client";
 
 const GOOGLE_PROVIDER_ID = "google" as const;
-const TOKEN_WARNING_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const REQUIRED_SCOPES = [
   "https://www.googleapis.com/auth/analytics.readonly",
 ] as const;
