@@ -30,15 +30,12 @@ export function GoogleConnectionBanner() {
 
   const getVariant = () => {
     if (needsReconnection) return "destructive";
-    if (status === "expiring_soon") return "warning";
     return "info";
   };
 
   const getIcon = () => {
     if (needsReconnection)
       return <AlertCircle className="h-5 w-5 flex-shrink-0" />;
-    if (status === "expiring_soon")
-      return <AlertTriangle className="h-5 w-5 flex-shrink-0" />;
     return <CheckCircle className="h-5 w-5 flex-shrink-0" />;
   };
 
@@ -50,8 +47,6 @@ export function GoogleConnectionBanner() {
         "flex items-center gap-3 border-b px-4 py-3 text-sm",
         variant === "destructive" &&
           "border-destructive/50 bg-destructive/10 text-destructive",
-        variant === "warning" &&
-          "border-yellow-500/50 bg-yellow-500/10 text-yellow-900 dark:text-yellow-100",
         variant === "info" &&
           "border-blue-500/50 bg-blue-500/10 text-blue-900 dark:text-blue-100",
       )}

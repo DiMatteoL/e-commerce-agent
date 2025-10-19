@@ -18,10 +18,14 @@ import { persistGaAccountsAndPropertiesIfMissing } from "@/server/google/persist
 import { TRPCError } from "@trpc/server";
 import {
   GoogleOAuthRequired,
+  GoogleAuthErrorReason,
   getGoogleOAuthClientForUser,
 } from "@/server/google/client";
 import { handleGoogleOAuthError } from "@/server/api/errors";
-import { checkGoogleConnectionHealth } from "@/server/google/status";
+import {
+  checkGoogleConnectionHealth,
+  markAccountAsRevoked,
+} from "@/server/google/status";
 import { reconcileGoogleAccount } from "@/server/google/reconnect";
 
 export const googleAnalyticsRouter = createTRPCRouter({
@@ -108,10 +112,6 @@ export const googleAnalyticsRouter = createTRPCRouter({
   listAccounts: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 
-    console.log(
-      `[listAccounts] Called for user ${userId} (${ctx.session.user.email})`,
-    );
-
     try {
       const accounts = await listAccountsWithPropertiesAndStreams(userId);
       // Persist to DB to ensure properties exist for selection
@@ -120,6 +120,14 @@ export const googleAnalyticsRouter = createTRPCRouter({
     } catch (err) {
       // Handle OAuth errors with full metadata preservation
       if (err instanceof GoogleOAuthRequired) {
+        // When OAuth error occurs, the connection status cache is stale
+        // Mark account as potentially revoked so status check reflects reality
+        if (
+          err.reason === GoogleAuthErrorReason.TOKEN_REVOKED ||
+          err.reason === GoogleAuthErrorReason.REFRESH_FAILED
+        ) {
+          await markAccountAsRevoked(userId);
+        }
         handleGoogleOAuthError(err);
       }
 

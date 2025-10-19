@@ -64,7 +64,6 @@ export function useReconnectGoogle() {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
           try {
             const result = await verifyMutation.mutateAsync();
-            console.log("✓ Reconnection verified:", result);
 
             // Invalidate queries to refresh data
             await utils.google_analytics.getConnectionStatus.invalidate();
@@ -84,10 +83,6 @@ export function useReconnectGoogle() {
             return;
           } catch (err) {
             lastError = err as Error;
-            console.warn(
-              `⚠ Reconnection verification attempt ${attempt + 1}/${maxAttempts} failed:`,
-              err,
-            );
 
             // Don't retry on the last attempt
             if (attempt < maxAttempts - 1) {
@@ -100,11 +95,6 @@ export function useReconnectGoogle() {
         }
 
         // All attempts failed
-        console.error(
-          "✗ Reconnection verification failed after all attempts:",
-          lastError,
-        );
-
         // Still invalidate queries - the connection might work on next manual attempt
         await utils.google_analytics.getConnectionStatus.invalidate();
       } finally {

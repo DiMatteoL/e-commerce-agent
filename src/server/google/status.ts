@@ -72,7 +72,7 @@ export async function checkGoogleConnectionHealth(
   const expiresAt = account.expires_at;
   const expiryMs = expiresAt ? expiresAt * 1000 : 0;
 
-  // Token expired and no refresh token
+  // Token expired and no refresh token - CRITICAL ERROR
   if (expiryMs && expiryMs < nowMs && !account.refresh_token) {
     return {
       status: "expired",
@@ -84,19 +84,24 @@ export async function checkGoogleConnectionHealth(
     };
   }
 
-  // Token expiring soon
-  if (expiryMs && expiryMs - nowMs < TOKEN_WARNING_THRESHOLD_MS) {
+  // Token expired but has refresh token - auto-refresh will handle it
+  // This is NORMAL - access tokens expire every hour
+  // We'll refresh on next API call, so connection is still healthy
+  if (expiryMs && expiryMs < nowMs && account.refresh_token) {
     return {
-      status: "expiring_soon",
-      isHealthy: true,
+      status: "connected", // Still connected - refresh token is valid
+      isHealthy: true, // Healthy - can auto-refresh
       needsReconnection: false,
-      warningMessage: "Your Google connection will expire soon",
       expiresAt: expiresAt ?? undefined,
       scopes: account.scope?.split(" ") ?? [],
     };
   }
 
-  // All good
+  // NOTE: We removed "expiring_soon" warning state
+  // Users don't need to see warnings as long as auto-refresh works
+  // Only show errors when refresh actually fails
+
+  // All good - token is valid and we can refresh
   return {
     status: "connected",
     isHealthy: true,

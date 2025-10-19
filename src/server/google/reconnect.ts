@@ -15,15 +15,10 @@ export async function reconcileGoogleAccount(userId: string): Promise<void> {
 
   // If multiple accounts exist (shouldn't happen, but handle it)
   if (googleAccounts.length > 1) {
-    console.warn(
-      `User ${userId} has ${googleAccounts.length} Google accounts. Consolidating...`,
-    );
-
     const primary = googleAccounts[0];
     const duplicates = googleAccounts.slice(1);
 
     if (!primary) {
-      console.error(`No primary account found for user ${userId}`);
       return;
     }
 
@@ -39,10 +34,6 @@ export async function reconcileGoogleAccount(userId: string): Promise<void> {
           ),
         );
     }
-
-    console.log(
-      `✓ Consolidated to single Google account: ${primary.providerAccountId}`,
-    );
   }
 }
 

@@ -50,13 +50,9 @@ export async function refreshExpiringTokens(): Promise<{
       // This will trigger refresh if needed
       await getGoogleOAuthClientForUser(account.userId);
       refreshed++;
-      console.log(`✓ Proactively refreshed tokens for user ${account.userId}`);
     } catch (err) {
       failed++;
-      console.error(
-        `✗ Failed to proactively refresh for user ${account.userId}:`,
-        err instanceof Error ? err.message : err,
-      );
+      // Silently fail - errors will be handled when user makes API call
     }
   }
 

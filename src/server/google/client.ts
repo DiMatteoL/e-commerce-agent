@@ -165,9 +165,6 @@ async function refreshAccessTokenWithRetry(
       // Retry on server errors or network issues
       if (statusCode && statusCode >= 500) {
         const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
-        console.log(
-          `Token refresh attempt ${attempt + 1}/${maxRetries} failed with ${statusCode}. Retrying after ${delay}ms...`,
-        );
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
@@ -193,7 +190,6 @@ export async function getGoogleOAuthClientForUser(userId: string) {
     );
 
   if (!account) {
-    console.error(`[OAuth] No Google account found for user ${userId}`);
     throw new GoogleOAuthRequired(GoogleAuthErrorReason.NO_ACCOUNT);
   }
 
@@ -201,34 +197,6 @@ export async function getGoogleOAuthClientForUser(userId: string) {
     if (!scope) return false;
     const granted = new Set(scope.split(/\s+/).filter(Boolean));
     return REQUIRED_SCOPES.every((s) => granted.has(s));
-  }
-
-  // Log current token state for debugging
-  const now = Date.now();
-  const expiresAt = account.expires_at ? account.expires_at * 1000 : 0;
-  const timeToExpiry = expiresAt ? Math.floor((expiresAt - now) / 1000) : 0;
-
-  console.log(`[OAuth] Token state for user ${userId}:`, {
-    accountUserId: account.userId,
-    requestedUserId: userId,
-    userIdMatch: account.userId === userId,
-    providerAccountId: account.providerAccountId,
-    hasAccessToken: !!account.access_token,
-    accessTokenPrefix: account.access_token?.substring(0, 20) + "...",
-    hasRefreshToken: !!account.refresh_token,
-    expiresInSeconds: timeToExpiry,
-    isExpired: expiresAt < now,
-    hasRequiredScopes: hasAllRequiredScopes(account.scope),
-    expiresAtReadable: expiresAt ? new Date(expiresAt).toISOString() : "N/A",
-  });
-
-  // Verify account belongs to the requested user
-  if (account.userId !== userId) {
-    console.error(`[OAuth] CRITICAL: Account userId mismatch!`, {
-      accountUserId: account.userId,
-      requestedUserId: userId,
-      providerAccountId: account.providerAccountId,
-    });
   }
 
   // If required scopes are missing, force re-consent
@@ -242,56 +210,14 @@ export async function getGoogleOAuthClientForUser(userId: string) {
     // redirectUri - not needed for API calls, only for auth flow
   );
 
-  console.log(`[OAuth] Created OAuth2Client:`, {
-    hasClientId: !!oauth2._clientId,
-    hasClientSecret: !!oauth2._clientSecret,
-  });
-
-  const credentials = {
+  oauth2.setCredentials({
     access_token: account.access_token ?? undefined,
     refresh_token: account.refresh_token ?? undefined,
     expiry_date: account.expires_at ? account.expires_at * 1000 : undefined,
     scope: account.scope ?? undefined,
     token_type: account.token_type ?? undefined,
     id_token: account.id_token ?? undefined,
-  };
-
-  console.log(`[OAuth] Setting credentials on OAuth2Client:`, {
-    hasAccessToken: !!credentials.access_token,
-    accessTokenLength: credentials.access_token?.length,
-    hasRefreshToken: !!credentials.refresh_token,
-    expiryDate: credentials.expiry_date
-      ? new Date(credentials.expiry_date).toISOString()
-      : "N/A",
-    tokenType: credentials.token_type,
   });
-
-  oauth2.setCredentials(credentials);
-
-  // Verify credentials were set
-  const setCredentials = oauth2.credentials;
-  console.log(`[OAuth] Credentials actually set on client:`, {
-    hasAccessToken: !!setCredentials.access_token,
-    hasRefreshToken: !!setCredentials.refresh_token,
-    expiryDate: setCredentials.expiry_date
-      ? new Date(setCredentials.expiry_date).toISOString()
-      : "N/A",
-  });
-
-  // CRITICAL: If access_token is null/undefined, OAuth2Client won't send auth header!
-  if (!setCredentials.access_token) {
-    console.error(
-      `[OAuth] CRITICAL: access_token is not set on OAuth2Client!`,
-      {
-        originalToken: account.access_token,
-        credentialsObject: credentials,
-      },
-    );
-    throw new GoogleOAuthRequired(
-      GoogleAuthErrorReason.TOKEN_EXPIRED,
-      "Access token is missing from OAuth2Client credentials",
-    );
-  }
 
   // If token is missing or expired/near expiry, refresh using the refresh_token
   const nowMs = Date.now();
@@ -349,7 +275,7 @@ export async function getGoogleOAuthClientForUser(userId: string) {
         expiry_date: credentials.expiry_date,
       });
 
-      console.log(`✓ Successfully refreshed tokens for user ${userId}`);
+      // Token refresh succeeded
     } catch (err) {
       // Detailed error classification
       const error = err as {
@@ -362,13 +288,6 @@ export async function getGoogleOAuthClientForUser(userId: string) {
       const errorCode = error?.response?.data?.error;
       const errorDescription = error?.response?.data?.error_description;
       const statusCode = error?.response?.status;
-
-      console.error("Token refresh failed:", {
-        errorCode,
-        errorDescription,
-        statusCode,
-        userId,
-      });
 
       // Classify error type
       if (errorCode === "invalid_grant") {
@@ -449,19 +368,9 @@ export async function getAnalyticsDataClient(userId: string) {
 export async function getAnalyticsAdminClient(userId: string) {
   const auth = await getGoogleOAuthClientForUser(userId);
 
-  // Verify auth has credentials before passing to API client
-  const authCreds = auth.credentials;
-  console.log(`[Analytics Client] Creating Analyticsadmin client with auth:`, {
-    hasCredentials: !!authCreds,
-    hasAccessToken: !!authCreds.access_token,
-    accessTokenPrefix: authCreds.access_token?.substring(0, 20),
-    clientId: !!auth._clientId,
-    clientSecret: !!auth._clientSecret,
-  });
-
-  // WORKAROUND: Create client with explicit headers
-  // The googleapis library sometimes fails to use OAuth2Client credentials properly
-  const accessToken = authCreds.access_token;
+  // WORKAROUND: Use explicit Bearer token headers
+  // The googleapis library's OAuth2Client sometimes fails to inject credentials properly
+  const accessToken = auth.credentials.access_token;
   if (!accessToken) {
     throw new GoogleOAuthRequired(
       GoogleAuthErrorReason.TOKEN_EXPIRED,
@@ -469,21 +378,9 @@ export async function getAnalyticsAdminClient(userId: string) {
     );
   }
 
-  console.log(
-    `[Analytics Client] Creating client with explicit auth header using Bearer token`,
-  );
-
-  // Try using just the token directly instead of OAuth2Client
-  const client = new analyticsadmin_v1beta.Analyticsadmin({
+  return new analyticsadmin_v1beta.Analyticsadmin({
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
-
-  // Verify the client was created
-  console.log(
-    `[Analytics Client] Client created with explicit Bearer token in headers`,
-  );
-
-  return client;
 }

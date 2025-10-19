@@ -91,16 +91,6 @@ export const authConfig = {
         account?.providerAccountId &&
         user?.id
       ) {
-        console.log(`[NextAuth] signIn callback triggered`, {
-          providerAccountId: account.providerAccountId,
-          userId: user.id,
-          userEmail: user.email,
-          hasAccessToken: !!account.access_token,
-          hasRefreshToken: !!account.refresh_token,
-          expiresAt: account.expires_at,
-          scope: account.scope,
-        });
-
         try {
           // Check if account already exists
           const existingAccount = await db
@@ -115,10 +105,6 @@ export const authConfig = {
             .limit(1);
 
           if (existingAccount.length > 0) {
-            console.log(
-              `[NextAuth] Found existing account, updating tokens...`,
-            );
-
             // Account exists - update tokens
             // CRITICAL: Update for THIS user only (not just by providerAccountId)
             await db
@@ -143,21 +129,6 @@ export const authConfig = {
                   eq(accounts.providerAccountId, account.providerAccountId),
                 ),
               );
-
-            console.log(`✓ [NextAuth] Updated existing Google account`, {
-              providerAccountId: account.providerAccountId,
-              userId: user.id,
-              userEmail: user.email,
-              existingAccountUserId: existingAccount[0]?.userId,
-              expiresAt: account.expires_at,
-              expiresAtReadable: account.expires_at
-                ? new Date(account.expires_at * 1000).toISOString()
-                : "N/A",
-            });
-          } else {
-            console.log(
-              `[NextAuth] No existing account found, letting adapter create new one`,
-            );
           }
         } catch (error) {
           console.error("[NextAuth] Error in signIn callback:", error);
@@ -169,10 +140,7 @@ export const authConfig = {
     },
   },
   events: {
-    // Log reconnection events for debugging
-    async linkAccount({ account, user }) {
-      console.log(`Account linked: ${account.provider} for user ${user.id}`);
-    },
+    // Optional: Add event handlers here if needed
   },
   debug: process.env.NODE_ENV === "development",
 } satisfies NextAuthConfig;
