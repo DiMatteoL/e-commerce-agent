@@ -102,13 +102,27 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 });
 
 /**
+ * Middleware for logging errors so they never go silent.
+ */
+const errorLoggingMiddleware = t.middleware(async ({ next, path, type }) => {
+  try {
+    return await next();
+  } catch (err) {
+    console.error(`[TRPC] ${type} ${path} error:`, err);
+    throw err as Error;
+  }
+});
+
+/**
  * Public (unauthenticated) procedure
  *
  * This is the base piece you use to build new queries and mutations on your tRPC API. It does not
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure.use(timingMiddleware);
+export const publicProcedure = t.procedure
+  .use(errorLoggingMiddleware)
+  .use(timingMiddleware);
 
 /**
  * Protected (authenticated) procedure
@@ -119,6 +133,7 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure
+  .use(errorLoggingMiddleware)
   .use(timingMiddleware)
   .use(({ ctx, next }) => {
     if (!ctx.session?.user) {

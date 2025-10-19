@@ -15,6 +15,7 @@ import { SessionProvider } from "next-auth/react";
 import { Header } from "@/components/app/header";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { GoogleConnectionBanner } from "@/components/google-connection-banner";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -81,6 +82,7 @@ export default async function RootLayout({
                     <AppSidebar />
                     <SidebarInset>
                       <Header />
+                      <GoogleConnectionBanner />
                       <div className="flex flex-1 flex-col gap-4 p-4">
                         {children}
                       </div>

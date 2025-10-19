@@ -17,6 +17,8 @@ import { GoogleAccountCard } from "@/components/ga4/account-card";
 import { GooglePropertyCard } from "@/components/ga4/property-card";
 import { api } from "@/trpc/react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useReconnectGoogle } from "@/hooks/use-reconnect-google";
+import { RefreshCw } from "lucide-react";
 
 type Ga4DataStream = {
   streamResourceName: string;
@@ -72,6 +74,13 @@ export function Ga4OnboardingDialog({
 
   const selectMutation = api.google_analytics.selectProperty.useMutation();
 
+  // Check connection status
+  const { data: connectionStatus } =
+    api.google_analytics.getConnectionStatus.useQuery();
+
+  // Reconnection hook
+  const { startReconnection, reconnecting } = useReconnectGoogle();
+
   const isPropChecked = (prop: Ga4PropertySummary) =>
     selectedProperty === prop.propertyResourceName;
 
@@ -105,6 +114,48 @@ export function Ga4OnboardingDialog({
   const dataApiUrl = `https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com${projectId ? `?project=${projectId}` : ""}`;
 
   const renderError = () => {
+    // Handle OAuth connection errors
+    if (connectionStatus && !connectionStatus.isHealthy) {
+      return (
+        <div className="border-destructive/50 bg-destructive/10 rounded-md border p-4 text-sm">
+          <div className="mb-1 font-medium">
+            {t("error.connectionExpired.title")}
+          </div>
+          <div className="text-muted-foreground mb-3">
+            {connectionStatus.warningMessage ??
+              t("error.connectionExpired.body")}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={() => startReconnection()}
+              disabled={reconnecting}
+            >
+              {reconnecting ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  {t("error.connectionExpired.reconnecting")}
+                </>
+              ) : (
+                t("error.connectionExpired.primaryCta")
+              )}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onOpenChange?.(false)}
+              disabled={reconnecting}
+            >
+              {t("error.connectionExpired.secondaryCta")}
+            </Button>
+          </div>
+          <div className="text-muted-foreground mt-2 text-xs">
+            {t("error.connectionExpired.finePrint")}
+          </div>
+        </div>
+      );
+    }
+
     if (apiNotEnabled) {
       return (
         <div className="border-destructive/50 bg-destructive/10 rounded-md border p-4 text-sm">

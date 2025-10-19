@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
+import { analyticsadmin_v1beta } from "googleapis";
 
 import {
   createTRPCRouter,
@@ -8,13 +9,24 @@ import {
 } from "@/server/api/trpc";
 import { db } from "@/server/db";
 import {
+  accounts,
   googleAnalyticsAccounts,
   googleAnalyticsProperties,
 } from "@/server/db/schema";
 import { listAccountsWithPropertiesAndStreams } from "@/server/google/properties";
 import { persistGaAccountsAndPropertiesIfMissing } from "@/server/google/persist";
 import { TRPCError } from "@trpc/server";
-import { GoogleOAuthRequired } from "@/server/google/client";
+import {
+  GoogleOAuthRequired,
+  GoogleAuthErrorReason,
+  getGoogleOAuthClientForUser,
+} from "@/server/google/client";
+import { handleGoogleOAuthError } from "@/server/api/errors";
+import {
+  checkGoogleConnectionHealth,
+  markAccountAsRevoked,
+} from "@/server/google/status";
+import { reconcileGoogleAccount } from "@/server/google/reconnect";
 
 export const googleAnalyticsRouter = createTRPCRouter({
   selectProperty: protectedProcedure
@@ -106,14 +118,17 @@ export const googleAnalyticsRouter = createTRPCRouter({
       await persistGaAccountsAndPropertiesIfMissing(userId, accounts);
       return accounts;
     } catch (err) {
-      // Not connected to Google via NextAuth
+      // Handle OAuth errors with full metadata preservation
       if (err instanceof GoogleOAuthRequired) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message:
-            "Google account not connected. Please connect your Google account to continue.",
-          cause: err,
-        });
+        // When OAuth error occurs, the connection status cache is stale
+        // Mark account as potentially revoked so status check reflects reality
+        if (
+          err.reason === GoogleAuthErrorReason.TOKEN_REVOKED ||
+          err.reason === GoogleAuthErrorReason.REFRESH_FAILED
+        ) {
+          await markAccountAsRevoked(userId);
+        }
+        handleGoogleOAuthError(err);
       }
 
       // Best-effort classification of googleapis errors
@@ -172,5 +187,117 @@ export const googleAnalyticsRouter = createTRPCRouter({
         cause: err as Error,
       });
     }
+  }),
+
+  /**
+   * Check Google account connection health
+   * Returns status without making external API calls
+   */
+  getConnectionStatus: publicProcedure.query(async ({ ctx }) => {
+    // If user is not authenticated, return not_connected status
+    if (!ctx.session?.user?.id) {
+      return {
+        status: "not_connected" as const,
+        isHealthy: false,
+        needsReconnection: false,
+        warningMessage: undefined,
+        errorReason: undefined,
+        expiresAt: undefined,
+        scopes: undefined,
+        connectedAt: undefined,
+      };
+    }
+
+    const userId = ctx.session.user.id;
+    const health = await checkGoogleConnectionHealth(userId);
+    return health;
+  }),
+
+  /**
+   * Test Google connection by making a lightweight API call
+   * This actually validates that the credentials work
+   */
+  testConnection: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    try {
+      // Try to get the OAuth client - this will attempt token refresh if needed
+      const client = await getGoogleOAuthClientForUser(userId);
+
+      // Make a lightweight API call to verify credentials
+      const analyticsAdmin = new analyticsadmin_v1beta.Analyticsadmin({
+        auth: client,
+      });
+
+      // List account summaries is a lightweight call
+      await analyticsAdmin.accountSummaries.list({ pageSize: 1 });
+
+      return {
+        success: true,
+        message: "Google connection is working",
+      };
+    } catch (err) {
+      if (err instanceof GoogleOAuthRequired) {
+        handleGoogleOAuthError(err);
+      }
+
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : "Connection test failed",
+      };
+    }
+  }),
+
+  /**
+   * Force disconnect Google account
+   * Useful for testing and user-initiated disconnection
+   */
+  disconnectGoogle: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    await db
+      .delete(accounts)
+      .where(and(eq(accounts.userId, userId), eq(accounts.provider, "google")));
+
+    return { success: true };
+  }),
+
+  /**
+   * Verify reconnection was successful
+   * Called by frontend after OAuth flow completes
+   */
+  verifyReconnection: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    // Reconcile any duplicate accounts
+    await reconcileGoogleAccount(userId);
+
+    // Check connection health
+    const health = await checkGoogleConnectionHealth(userId);
+
+    if (!health.isHealthy) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: health.warningMessage ?? "Reconnection failed",
+      });
+    }
+
+    // Check if selected property still exists and is accessible
+    const [selectedProp] = await db
+      .select()
+      .from(googleAnalyticsProperties)
+      .where(
+        and(
+          eq(googleAnalyticsProperties.userId, userId),
+          eq(googleAnalyticsProperties.selected, true),
+        ),
+      )
+      .limit(1);
+
+    return {
+      success: true,
+      hasSelectedProperty: !!selectedProp,
+      connectionHealth: health,
+    };
   }),
 });

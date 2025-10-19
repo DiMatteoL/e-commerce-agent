@@ -1,6 +1,7 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { eq, and } from "drizzle-orm";
 
 import { db } from "@/server/db";
 import {
@@ -54,6 +55,8 @@ export const authConfig = {
           ].join(" "),
         },
       },
+      // Allow account linking for the same email
+      allowDangerousEmailAccountLinking: true,
     }),
     /**
      * ...add more providers here.
@@ -79,5 +82,65 @@ export const authConfig = {
         id: user.id,
       },
     }),
+
+    // Handle account updates on reconnection
+    async signIn({ user, account }) {
+      // If this is a Google OAuth sign-in with account data
+      if (
+        account?.provider === "google" &&
+        account?.providerAccountId &&
+        user?.id
+      ) {
+        try {
+          // Check if account already exists
+          const existingAccount = await db
+            .select()
+            .from(accounts)
+            .where(
+              and(
+                eq(accounts.provider, "google"),
+                eq(accounts.providerAccountId, account.providerAccountId),
+              ),
+            )
+            .limit(1);
+
+          if (existingAccount.length > 0) {
+            // Account exists - update tokens
+            // CRITICAL: Update for THIS user only (not just by providerAccountId)
+            await db
+              .update(accounts)
+              .set({
+                access_token: account.access_token,
+                refresh_token:
+                  account.refresh_token ?? existingAccount[0]?.refresh_token,
+                expires_at: account.expires_at,
+                id_token: account.id_token,
+                scope: account.scope,
+                token_type: account.token_type,
+                session_state:
+                  typeof account.session_state === "string"
+                    ? account.session_state
+                    : null,
+              })
+              .where(
+                and(
+                  eq(accounts.userId, user.id), // CRITICAL: Match user ID
+                  eq(accounts.provider, "google"),
+                  eq(accounts.providerAccountId, account.providerAccountId),
+                ),
+              );
+          }
+        } catch (error) {
+          console.error("[NextAuth] Error in signIn callback:", error);
+          // Don't block sign-in on error - let adapter handle it
+        }
+      }
+
+      return true; // Allow sign-in
+    },
   },
+  events: {
+    // Optional: Add event handlers here if needed
+  },
+  debug: process.env.NODE_ENV === "development",
 } satisfies NextAuthConfig;
