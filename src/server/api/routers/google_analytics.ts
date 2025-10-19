@@ -193,7 +193,21 @@ export const googleAnalyticsRouter = createTRPCRouter({
    * Check Google account connection health
    * Returns status without making external API calls
    */
-  getConnectionStatus: protectedProcedure.query(async ({ ctx }) => {
+  getConnectionStatus: publicProcedure.query(async ({ ctx }) => {
+    // If user is not authenticated, return not_connected status
+    if (!ctx.session?.user?.id) {
+      return {
+        status: "not_connected" as const,
+        isHealthy: false,
+        needsReconnection: false,
+        warningMessage: undefined,
+        errorReason: undefined,
+        expiresAt: undefined,
+        scopes: undefined,
+        connectedAt: undefined,
+      };
+    }
+
     const userId = ctx.session.user.id;
     const health = await checkGoogleConnectionHealth(userId);
     return health;
