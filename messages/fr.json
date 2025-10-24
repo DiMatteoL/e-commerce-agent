@@ -36,23 +36,77 @@
   },
   "GA4OnboardingDialog": {
     "title": "Choisissez votre projet Google Analytics",
-    "description": "Choisissez le projet avec lequel vous souhaitez que l’agent vous aide. Vous pourrez ajuster votre choix plus tard.",
+    "description": "Choisissez le projet avec lequel vous souhaitez que l'agent vous aide. Vous pourrez ajuster votre choix plus tard.",
     "error": {
+      "connectionExpired": {
+        "title": "Connexion expirée",
+        "body": "Votre connexion Google Analytics a expiré. Veuillez vous reconnecter pour continuer.",
+        "primaryCta": "Reconnecter Google",
+        "reconnecting": "Reconnexion...",
+        "secondaryCta": "Annuler",
+        "finePrint": "Votre propriété sélectionnée et vos paramètres seront préservés."
+      },
       "missingPermissions": {
         "title": "Reconnectez Google Analytics pour continuer",
-        "body": "Votre session Google a expiré ou l’application n’a pas les autorisations nécessaires pour lire vos données Analytics. Veuillez vous reconnecter pour accorder un accès en lecture seule afin que nous puissions récupérer vos propriétés GA4 et vous fournir rapidement des insights pour développer votre boutique. Vous pouvez vous désinscrire à tout moment.",
-        "finePrint": "Nous ne demandons qu’un accès en lecture seule à Google Analytics. Nous ne modifions ni ne supprimons jamais vos données.",
+        "body": "Votre session Google a expiré ou l'application n'a pas les autorisations nécessaires pour lire vos données Analytics. Veuillez vous reconnecter pour accorder un accès en lecture seule afin que nous puissions récupérer vos propriétés GA4 et vous fournir rapidement des insights pour développer votre boutique. Vous pouvez vous désinscrire à tout moment.",
+        "finePrint": "Nous ne demandons qu'un accès en lecture seule à Google Analytics. Nous ne modifions ni ne supprimons jamais vos données.",
         "primaryCta": "Reconnecter Google",
         "secondaryCta": "Annuler"
       },
       "apiNotEnabled": {
         "title": "Activez les API Google Analytics pour continuer",
-        "body": "Votre projet Google Cloud n’a pas les API requises activées. Activez les API Admin et Data afin que nous puissions lire vos propriétés GA4 et vous fournir rapidement des insights pour développer votre boutique.",
+        "body": "Votre projet Google Cloud n'a pas les API requises activées. Activez les API Admin et Data afin que nous puissions lire vos propriétés GA4 et vous fournir rapidement des insights pour développer votre boutique.",
         "finePrint": "Vous serez redirigé vers la console Google Cloud pour activer les API de votre projet.",
-        "primaryCtaAdmin": "Ouvrir l’API Admin",
-        "primaryCtaData": "Ouvrir l’API Data",
+        "primaryCtaAdmin": "Ouvrir l'API Admin",
+        "primaryCtaData": "Ouvrir l'API Data",
         "secondaryCta": "Fermer"
       }
     }
+  },
+  "GoogleConnection": {
+    "status": {
+      "not_connected": {
+        "title": "Google Analytics non connecté"
+      },
+      "expired": {
+        "title": "Connexion Google expirée"
+      },
+      "expiring_soon": {
+        "title": "Connexion expire bientôt"
+      },
+      "missing_scopes": {
+        "title": "Autorisations supplémentaires requises"
+      },
+      "revoked": {
+        "title": "Accès Google révoqué"
+      },
+      "connected": {
+        "title": "Connecté"
+      }
+    },
+    "action": {
+      "reconnect": "Reconnecter",
+      "reconnecting": "Reconnexion...",
+      "dismiss": "Ignorer"
+    }
+  },
+  "Settings": {
+    "GoogleConnection": {
+      "title": "Connexion Google Analytics",
+      "description": "Gérer votre intégration Google Analytics",
+      "status": {
+        "healthy": "Connecté et fonctionnel",
+        "unhealthy": "Problème de connexion détecté"
+      },
+      "disconnect": {
+        "confirm": "Êtes-vous sûr de vouloir déconnecter votre compte Google ? Vous devrez vous reconnecter pour utiliser les fonctionnalités GA4."
+      }
+    }
+  },
+  "ChatPage": {
+    "loading": "Chargement de la conversation...",
+    "notFound": "Conversation introuvable",
+    "unauthorized": "Vous devez être connecté pour voir cette conversation",
+    "error": "Erreur lors du chargement de la conversation"
   }
 }
