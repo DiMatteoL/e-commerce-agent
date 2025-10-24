@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -95,13 +95,23 @@ export function Ga4OnboardingDialog({
     if (!selectedProperty) return;
     setSubmitting(true);
     try {
-      await selectMutation.mutateAsync({
-        propertyResourceName: selectedProperty,
-      });
-      await utils.google_analytics.getSelectedProperty.invalidate();
-      await utils.user.getUserWithChats.invalidate();
+      // Fire and forget - don't wait for completion
+      selectMutation
+        .mutateAsync({
+          propertyResourceName: selectedProperty,
+        })
+        .then(() => {
+          // Update cache in background
+          void utils.google_analytics.getSelectedProperty.invalidate();
+          void utils.user.getUserWithChats.invalidate();
+        })
+        .catch((err) => {
+          console.error("Failed to select property:", err);
+        });
+
+      // Immediate redirect for instant feedback
       onOpenChange?.(false);
-      router.replace("/");
+      router.replace("/chat");
       router.refresh();
     } catch (err) {
       console.error(err);
