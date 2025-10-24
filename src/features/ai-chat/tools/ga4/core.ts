@@ -161,6 +161,33 @@ export const ITEM_SCOPED_METRICS = new Set<string>([
   "itemRevenue",
   "itemsViewed",
   "itemPurchaseQuantity",
+  "itemsPurchased",
+  "itemsAddedToCart",
+  "itemsCheckedOut",
+  "itemsClickedInList",
+  "itemsClickedInPromotion",
+  "itemListClickEvents",
+  "itemListViewEvents",
+  "itemPromotionClickEvents",
+  "itemPromotionViewEvents",
+  "itemRefundAmount",
+]);
+
+export const USER_SCOPED_METRICS = new Set<string>([
+  "activeUsers",
+  "totalUsers",
+  "newUsers",
+  "returningUsers",
+  "userEngagementDuration",
+]);
+
+export const SESSION_SCOPED_METRICS = new Set<string>([
+  "sessions",
+  "engagedSessions",
+  "bounceRate",
+  "sessionConversionRate",
+  "averageSessionDuration",
+  "sessionsPerUser",
 ]);
 
 export const ITEM_SCOPED_DIMENSIONS = new Set<string>([
@@ -210,12 +237,14 @@ export async function runGaReportCore({
   const { dims: availableDims, mets: availableMets } =
     await getPropertyMetadataSets(dataClient, propertyResourceName);
 
-  const dimSan = sanitizeFields(dimensions, availableDims, ["itemName"]);
+  // Don't default to itemName - let it be empty for user/session metrics
+  const dimSan = sanitizeFields(dimensions, availableDims);
   const metSan = sanitizeFields(metrics, availableMets, [
-    "purchases",
-    "itemRevenue",
-    "totalRevenue",
     "activeUsers",
+    "totalUsers",
+    "sessions",
+    "purchases",
+    "totalRevenue",
   ]);
 
   const warnings: string[] = [...dimSan.warnings, ...metSan.warnings];
@@ -230,9 +259,28 @@ export async function runGaReportCore({
   let keptDimensions = dimSan.kept;
   let keptMetrics = metSan.kept;
 
-  // If any metric is item-scoped but there are no item-scoped dimensions, try to inject one
+  // Check for incompatible combinations
+  const hasUserMetric = keptMetrics.some(
+    (m) => USER_SCOPED_METRICS.has(m) || SESSION_SCOPED_METRICS.has(m),
+  );
   const hasItemMetric = keptMetrics.some((m) => ITEM_SCOPED_METRICS.has(m));
   const hasItemDim = keptDimensions.some((d) => ITEM_SCOPED_DIMENSIONS.has(d));
+
+  // CRITICAL: User/Session metrics are INCOMPATIBLE with item dimensions
+  if (hasUserMetric && hasItemDim && !hasItemMetric) {
+    // Remove item dimensions when querying user/session metrics
+    const removedDims = keptDimensions.filter((d) =>
+      ITEM_SCOPED_DIMENSIONS.has(d),
+    );
+    keptDimensions = keptDimensions.filter(
+      (d) => !ITEM_SCOPED_DIMENSIONS.has(d),
+    );
+    warnings.push(
+      `Removed incompatible item dimensions (${removedDims.join(", ")}) from user/session-scoped metrics query. User metrics like 'activeUsers' cannot be broken down by products.`,
+    );
+  }
+
+  // If any metric is item-scoped but there are no item-scoped dimensions, try to inject one
   if (hasItemMetric && !hasItemDim) {
     const inject = pickFirstAvailableItemDimension(availableDims);
     if (inject) {

@@ -1,12 +1,19 @@
 import { type Message } from "ai";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { CodeBlock } from "@/components/ui/codeblock";
 import { MemoizedReactMarkdown } from "@/components/markdown";
 import { ChatMessageActions } from "@/components/chat-message-actions";
 import { Bot, User } from "lucide-react";
+
+interface CodeProps {
+  inline?: boolean;
+  className?: string;
+  children?: ReactNode;
+}
 
 export interface ChatMessageProps {
   message: Message;
@@ -35,27 +42,31 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
             p({ children }) {
               return <p className="mb-2 last:mb-0">{children}</p>;
             },
-            // @ts-expect-error - react-markdown types are complex
-            code({ inline, className, children, ...props }) {
-              // @ts-expect-error - children array access
-              if (children.length) {
-                // @ts-expect-error - children array access
-                if (children[0] == "▍") {
-                  return (
-                    <span className="mt-1 animate-pulse cursor-default">▍</span>
-                  );
-                }
+            code(props) {
+              const { inline, className, children, ...rest } =
+                props as CodeProps;
 
-                // @ts-expect-error - children array mutation
-                children[0] = (children[0] as string).replace("`▍`", "▍");
+              // Safely convert children to string
+              let content = "";
+              if (typeof children === "string") {
+                content = children;
+              } else if (Array.isArray(children)) {
+                content = children.join("");
+              }
+
+              // Show animated cursor indicator
+              if (content === "▍") {
+                return (
+                  <span className="mt-1 animate-pulse cursor-default">▍</span>
+                );
               }
 
               const match = /language-(\w+)/.exec(className ?? "");
 
               if (inline) {
                 return (
-                  <code className={className} {...props}>
-                    {children}
+                  <code className={className} {...rest}>
+                    {content.replace(/`▍`/g, "▍")}
                   </code>
                 );
               }
@@ -64,9 +75,8 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
                 <CodeBlock
                   key={Math.random()}
                   language={match?.[1] ?? ""}
-                  // eslint-disable-next-line @typescript-eslint/no-base-to-string
-                  value={String(children).replace(/\n$/, "")}
-                  {...props}
+                  value={content.replace(/\n$/, "")}
+                  {...rest}
                 />
               );
             },

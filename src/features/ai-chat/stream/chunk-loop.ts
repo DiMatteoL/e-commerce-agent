@@ -67,8 +67,7 @@ export async function* ModelStream({
   maxToolRounds?: number;
 }): AsyncGenerator<StreamToken> {
   const llm = new ChatAnthropic({
-    model: "claude-sonnet-4-20250514",
-    temperature: 0.1,
+    model: "claude-sonnet-4-5-20250929",
   });
   const llmWithTools = llm.bindTools(tools);
 

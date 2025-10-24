@@ -20,8 +20,15 @@ export const gaGeneralReportTool = tool(
   },
   {
     name: "ga_general_report",
-    description:
-      "General (non-item) GA4 report. Defaults to totalRevenue with no dimensions. Safe with session/user/event dimensions like date, country, sessionDefaultChannelGroup.",
+    description: `General (non-item) GA4 report for property-level, user-scoped, and session-scoped metrics.
+
+USE THIS FOR: activeUsers, totalUsers, sessions, engagedSessions, totalRevenue, purchases, conversions, bounceRate
+COMPATIBLE DIMENSIONS: date, country, city, deviceCategory, sessionDefaultChannelGroup, sessionSource, sessionMedium, browser, newVsReturning
+
+❌ DO NOT USE with item dimensions (itemName, itemId, itemBrand) - these are incompatible with user/session metrics
+❌ DO NOT USE for item-scoped metrics (itemRevenue, itemsViewed) - use ga_item_report instead
+
+Example: "activeUsers by date" ✅ | "sessions by deviceCategory" ✅ | "activeUsers by itemName" ❌`,
     schema: z.object({
       dimensions: z.array(z.string().min(1)).max(3).optional(),
       metrics: z.array(z.string().min(1)).max(5).optional(),
