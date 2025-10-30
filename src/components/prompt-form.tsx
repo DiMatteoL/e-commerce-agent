@@ -1,6 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Textarea from "react-textarea-autosize";
+import { useTranslations } from "next-intl";
 
 import { useEnterSubmit } from "@/hooks/use-enter-submit";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ export function PromptForm({
   setInput,
   isLoading,
 }: PromptProps) {
+  const t = useTranslations("PromptForm");
   const { formRef, onKeyDown } = useEnterSubmit();
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -57,10 +59,10 @@ export function PromptForm({
               )}
             >
               <Plus />
-              <span className="sr-only">New Chat</span>
+              <span className="sr-only">{t("newChat")}</span>
             </Link>
           </TooltipTrigger>
-          <TooltipContent>New Chat</TooltipContent>
+          <TooltipContent>{t("newChat")}</TooltipContent>
         </Tooltip>
         <Textarea
           ref={inputRef}
@@ -69,7 +71,7 @@ export function PromptForm({
           rows={1}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Send a message."
+          placeholder={t("placeholder")}
           spellCheck={false}
           className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
         />
@@ -82,10 +84,10 @@ export function PromptForm({
                 disabled={isLoading || input === ""}
               >
                 <CornerDownLeft />
-                <span className="sr-only">Send message</span>
+                <span className="sr-only">{t("sendMessage")}</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Send message</TooltipContent>
+            <TooltipContent>{t("sendMessage")}</TooltipContent>
           </Tooltip>
         </div>
       </div>

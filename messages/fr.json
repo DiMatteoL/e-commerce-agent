@@ -110,5 +110,10 @@
     "notFound": "Conversation introuvable",
     "unauthorized": "Vous devez être connecté pour voir cette conversation",
     "error": "Erreur lors du chargement de la conversation"
+  },
+  "PromptForm": {
+    "placeholder": "Envoyer un message.",
+    "sendMessage": "Envoyer le message",
+    "newChat": "Nouvelle conversation"
   }
 }

@@ -110,5 +110,10 @@
     "notFound": "Chat not found",
     "unauthorized": "You need to be logged in to view this chat",
     "error": "Error loading chat"
+  },
+  "PromptForm": {
+    "placeholder": "Send a message.",
+    "sendMessage": "Send message",
+    "newChat": "New Chat"
   }
 }
