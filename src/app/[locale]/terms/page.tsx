@@ -73,7 +73,7 @@ export default function TermsOfServicePage() {
           <ul className="list-disc space-y-2 pl-6">
             <li>
               You authorize us to access your Google Analytics data through
-              Google's API on your behalf.
+              Google&apos;s API on your behalf.
             </li>
             <li>
               We only access your data when you make specific requests through
@@ -157,11 +157,11 @@ export default function TermsOfServicePage() {
             Disclaimer of Warranties
           </h2>
           <p>
-            THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT ANY
-            WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT
-            THE SERVICE WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE. WE DO NOT
-            WARRANT THE ACCURACY OR RELIABILITY OF ANY INFORMATION, DATA, OR
-            INSIGHTS PROVIDED THROUGH THE SERVICE.
+            THE SERVICE IS PROVIDED &ldquo;AS IS&rdquo; AND &ldquo;AS
+            AVAILABLE&rdquo; WITHOUT ANY WARRANTIES OF ANY KIND, EXPRESS OR
+            IMPLIED. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED,
+            SECURE, OR ERROR-FREE. WE DO NOT WARRANT THE ACCURACY OR RELIABILITY
+            OF ANY INFORMATION, DATA, OR INSIGHTS PROVIDED THROUGH THE SERVICE.
           </p>
         </section>
 
