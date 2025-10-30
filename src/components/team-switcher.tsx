@@ -13,6 +13,7 @@ import { api } from "@/trpc/react";
 import { Ga4OnboardingDialog } from "@/components/ga4-onboarding-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SmallLogo } from "@/components/small-logo";
+import { useGoogleConnectionStatus } from "@/hooks/use-google-connection-status";
 
 export function TeamSwitcher() {
   const t = useTranslations("TeamSwitcher");
@@ -20,8 +21,17 @@ export function TeamSwitcher() {
     api.google_analytics.getSelectedProperty.useQuery();
 
   const [open, setOpen] = React.useState(false);
+
+  // Check connection status to determine if we should fetch accounts
+  const { isHealthy } = useGoogleConnectionStatus();
+
+  // Only fetch accounts if:
+  // 1. Dialog is open
+  // 2. User has a healthy Google connection (authenticated and not expired)
+  const shouldFetchAccounts = open && isHealthy;
+
   const accountsQuery = api.google_analytics.listAccounts.useQuery(undefined, {
-    enabled: open,
+    enabled: shouldFetchAccounts,
   });
   const accounts = accountsQuery.data ? [...accountsQuery.data] : [];
   const isLoadingAccounts = accountsQuery.isLoading;
@@ -52,7 +62,7 @@ export function TeamSwitcher() {
             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             onClick={() => setOpen(true)}
           >
-            <div className="text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+            <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
               <SmallLogo size={20} />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
