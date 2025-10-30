@@ -85,6 +85,8 @@
       }
     },
     "action": {
+      "connect": "Connect Google Analytics",
+      "connecting": "Connecting...",
       "reconnect": "Reconnect",
       "reconnecting": "Reconnecting...",
       "dismiss": "Dismiss"

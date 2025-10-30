@@ -67,6 +67,48 @@ export async function POST(req: NextRequest) {
       selectedGa = rows[0] ?? undefined;
     }
 
+    // Early return with helpful message if user is not authenticated or GA not connected
+    // This prevents slow AI inference with failing tool calls
+    if (!userId || !selectedGa) {
+      const helpMessage = !userId
+        ? `👋 **Welcome!** To get started with GA4 data analysis, please:
+
+1. **Sign in** to your account using the button in the top-right corner
+2. **Connect your Google Analytics** account and grant read-only access to your Google Analytics data
+
+Once connected, I'll be able to help you analyze conversion rates, identify opportunities, and provide data-driven recommendations for your e-commerce business.
+
+*Note: We only request read-only access to Google Analytics. We never edit or delete your data.*`
+        : `👋 **Almost there!** To analyze your GA4 data, please:
+
+1. **Connect your Google Analytics** account (look for the banner at the top or use the property selector)
+2. **Grant read-only access** when prompted by Google
+
+Once connected, I'll be able to help you analyze conversion rates, identify opportunities, and provide data-driven recommendations based on your actual GA4 data.
+
+*Note: We only request read-only access to Google Analytics. We never edit or delete your data.*`;
+
+      const readableStream = new ReadableStream({
+        start(controller) {
+          const data = JSON.stringify({
+            type: "text",
+            content: helpMessage,
+          });
+          controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
+          controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+          controller.close();
+        },
+      });
+
+      return new Response(readableStream, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
     // Create the stream with user and GA context
     const stream = await chatStream(messages, userInfo, selectedGa);
 

@@ -22,6 +22,8 @@ export function GoogleConnectionBanner() {
   // Don't show for fully connected status
   if (status === "connected" && isHealthy) return null;
 
+  const isNotConnected = status === "not_connected";
+
   const getVariant = () => {
     if (needsReconnection) return "destructive";
     return "info";
@@ -55,7 +57,23 @@ export function GoogleConnectionBanner() {
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-2">
-        {needsReconnection && (
+        {isNotConnected ? (
+          <Button
+            size="sm"
+            variant="default"
+            onClick={() => startReconnection()}
+            disabled={reconnecting}
+          >
+            {reconnecting ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                {t("action.connecting")}
+              </>
+            ) : (
+              t("action.connect")
+            )}
+          </Button>
+        ) : needsReconnection ? (
           <Button
             size="sm"
             variant="default"
@@ -71,7 +89,7 @@ export function GoogleConnectionBanner() {
               t("action.reconnect")
             )}
           </Button>
-        )}
+        ) : null}
 
         <Button
           size="sm"
