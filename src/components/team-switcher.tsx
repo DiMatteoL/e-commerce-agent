@@ -47,7 +47,7 @@ export function TeamSwitcher() {
     <>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButtonz
+          <SidebarMenuButton
             size="lg"
             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             onClick={() => setOpen(true)}
@@ -69,7 +69,7 @@ export function TeamSwitcher() {
               )}
             </div>
             <ChevronsUpDown className="ml-auto" />
-          </SidebarMenuButtonz>
+          </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
 
