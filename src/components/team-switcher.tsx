@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronsUpDown, GalleryVerticalEnd } from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -12,6 +12,7 @@ import {
 import { api } from "@/trpc/react";
 import { Ga4OnboardingDialog } from "@/components/ga4-onboarding-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SmallLogo } from "@/components/small-logo";
 
 export function TeamSwitcher() {
   const t = useTranslations("TeamSwitcher");
@@ -46,13 +47,13 @@ export function TeamSwitcher() {
     <>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton
+          <SidebarMenuButtonz
             size="lg"
             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             onClick={() => setOpen(true)}
           >
-            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-              <GalleryVerticalEnd size={16} />
+            <div className="text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+              <SmallLogo size={20} />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
               {isLoadingSelected ? (
@@ -68,7 +69,7 @@ export function TeamSwitcher() {
               )}
             </div>
             <ChevronsUpDown className="ml-auto" />
-          </SidebarMenuButton>
+          </SidebarMenuButtonz>
         </SidebarMenuItem>
       </SidebarMenu>
 
