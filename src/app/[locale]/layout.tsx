@@ -16,6 +16,7 @@ import { Header } from "@/components/app/header";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { GoogleConnectionBanner } from "@/components/google-connection-banner";
+import { ClarityAnalytics } from "@/components/clarity-analytics";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -94,6 +95,7 @@ export default async function RootLayout({
             </ThemeProvider>
           </HydrateClient>
         </TRPCReactProvider>
+        <ClarityAnalytics />
       </body>
     </html>
   );
