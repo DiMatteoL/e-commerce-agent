@@ -39,10 +39,10 @@
     "description": "Pick the project you want the agent to help you with. You can adjust your choice later.",
     "error": {
       "connectionExpired": {
-        "title": "Connection Expired",
-        "body": "Your Google Analytics connection has expired. Please reconnect to continue.",
-        "primaryCta": "Reconnect Google",
-        "reconnecting": "Reconnecting...",
+        "title": "Google Analytics Not Connected",
+        "body": "Your Google Analytics is not connected. Please connect to continue.",
+        "primaryCta": "Connect Google",
+        "reconnecting": "Connecting...",
         "secondaryCta": "Cancel",
         "finePrint": "Your selected property and settings will be preserved."
       },
@@ -66,10 +66,10 @@
   "GoogleConnection": {
     "status": {
       "not_connected": {
-        "title": "Google Analytics Not Connected"
+        "title": "Unlock powerful insights to grow your business"
       },
       "expired": {
-        "title": "Google Connection Expired"
+        "title": "Unlock powerful insights to grow your business"
       },
       "expiring_soon": {
         "title": "Connection Expiring Soon"

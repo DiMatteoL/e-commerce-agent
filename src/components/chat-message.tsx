@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
 import { CodeBlock } from "@/components/ui/codeblock";
 import { MemoizedReactMarkdown } from "@/components/markdown";
 import { ChatMessageActions } from "@/components/chat-message-actions";
-import { Bot, User } from "lucide-react";
+import { User } from "lucide-react";
+import { SmallLogo } from "@/components/small-logo";
 
 interface CodeProps {
   inline?: boolean;
@@ -27,13 +28,13 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
     >
       <div
         className={cn(
-          "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border shadow select-none",
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-md select-none",
           message.role === "user"
-            ? "bg-background"
-            : "bg-primary text-primary-foreground",
+            ? "bg-background border shadow"
+            : "bg-brand-gradient text-white",
         )}
       >
-        {message.role === "user" ? <User /> : <Bot />}
+        {message.role === "user" ? <User /> : <SmallLogo size={20} />}
       </div>
       <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
         <MemoizedReactMarkdown

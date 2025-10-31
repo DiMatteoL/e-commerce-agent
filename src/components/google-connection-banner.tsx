@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { AlertCircle, RefreshCw, CheckCircle, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { RefreshCw, Sparkles, ArrowRight } from "lucide-react";
 import { useGoogleConnectionStatus } from "@/hooks/use-google-connection-status";
 import { useReconnectGoogle } from "@/hooks/use-reconnect-google";
 import { cn } from "@/lib/utils";
@@ -14,10 +13,9 @@ export function GoogleConnectionBanner() {
     useGoogleConnectionStatus();
 
   const { startReconnection, reconnecting } = useReconnectGoogle();
-  const [dismissed, setDismissed] = React.useState(false);
 
-  // Don't show banner if loading or if user dismissed it
-  if (isLoading || dismissed) return null;
+  // Don't show banner if loading
+  if (isLoading) return null;
 
   // Don't show for fully connected status
   if (status === "connected" && isHealthy) return null;
@@ -30,9 +28,7 @@ export function GoogleConnectionBanner() {
   };
 
   const getIcon = () => {
-    if (needsReconnection)
-      return <AlertCircle className="h-5 w-5 flex-shrink-0" />;
-    return <CheckCircle className="h-5 w-5 flex-shrink-0" />;
+    return <Sparkles className="h-4 w-4 flex-shrink-0" />;
   };
 
   const variant = getVariant();
@@ -40,66 +36,58 @@ export function GoogleConnectionBanner() {
   return (
     <div
       className={cn(
-        "flex items-center gap-3 border-b px-4 py-3 text-sm",
-        variant === "destructive" &&
-          "border-destructive/50 bg-destructive/10 text-destructive",
-        variant === "info" &&
-          "border-blue-500/50 bg-blue-500/10 text-blue-900 dark:text-blue-100",
+        "flex items-center justify-center gap-3 px-4 py-2 text-sm",
+        variant === "destructive" && "bg-secondary text-secondary-foreground",
+        variant === "info" && "bg-secondary text-secondary-foreground",
       )}
     >
       <div className="flex-shrink-0">{getIcon()}</div>
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0">
         <p className="font-medium">{t(`status.${status}.title`)}</p>
         {warningMessage && (
           <p className="mt-0.5 text-xs opacity-80">{warningMessage}</p>
         )}
       </div>
 
-      <div className="flex flex-shrink-0 items-center gap-2">
+      <div className="flex flex-shrink-0 items-center gap-3">
         {isNotConnected ? (
-          <Button
-            size="sm"
-            variant="default"
+          <button
             onClick={() => startReconnection()}
             disabled={reconnecting}
+            className="flex cursor-pointer items-center gap-1 text-sm font-medium underline underline-offset-4 hover:no-underline disabled:cursor-not-allowed disabled:opacity-50"
           >
             {reconnecting ? (
               <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                <RefreshCw className="h-3 w-3 animate-spin" />
                 {t("action.connecting")}
               </>
             ) : (
-              t("action.connect")
+              <>
+                {t("action.connect")}
+                <ArrowRight className="h-3 w-3" />
+              </>
             )}
-          </Button>
+          </button>
         ) : needsReconnection ? (
-          <Button
-            size="sm"
-            variant="default"
+          <button
             onClick={() => startReconnection()}
             disabled={reconnecting}
+            className="flex cursor-pointer items-center gap-1 text-sm font-medium underline underline-offset-4 hover:no-underline disabled:cursor-not-allowed disabled:opacity-50"
           >
             {reconnecting ? (
               <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                <RefreshCw className="h-3 w-3 animate-spin" />
                 {t("action.reconnecting")}
               </>
             ) : (
-              t("action.reconnect")
+              <>
+                {t("action.reconnect")}
+                <ArrowRight className="h-3 w-3" />
+              </>
             )}
-          </Button>
+          </button>
         ) : null}
-
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setDismissed(true)}
-          className="h-8 w-8 p-0"
-        >
-          <X className="h-4 w-4" />
-          <span className="sr-only">{t("action.dismiss")}</span>
-        </Button>
       </div>
     </div>
   );

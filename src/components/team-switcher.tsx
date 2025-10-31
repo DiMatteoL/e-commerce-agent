@@ -59,10 +59,10 @@ export function TeamSwitcher() {
         <SidebarMenuItem>
           <SidebarMenuButton
             size="lg"
-            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 transition-colors"
             onClick={() => setOpen(true)}
           >
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
+            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-brand-gradient text-white shadow-sm">
               <SmallLogo size={20} />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
@@ -73,12 +73,12 @@ export function TeamSwitcher() {
                 </>
               ) : (
                 <>
-                  <span className="truncate font-medium">{propertyLabel}</span>
-                  <span className="truncate text-xs">{accountLabel}</span>
+                  <span className="truncate font-semibold">{propertyLabel}</span>
+                  <span className="truncate text-xs text-sidebar-foreground/60">{accountLabel}</span>
                 </>
               )}
             </div>
-            <ChevronsUpDown className="ml-auto" />
+            <ChevronsUpDown className="ml-auto h-4 w-4 opacity-50" />
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

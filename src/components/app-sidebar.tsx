@@ -16,13 +16,13 @@ import {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="border-b border-sidebar-border">
         <TeamSwitcher />
       </SidebarHeader>
       <SidebarContent>
         <NavMain />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="border-t border-sidebar-border mt-auto">
         <NavUser />
       </SidebarFooter>
       <SidebarRail />

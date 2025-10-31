@@ -75,13 +75,15 @@ export function PromptForm({
           spellCheck={false}
           className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
         />
-        <div className="absolute top-4 right-0 sm:right-4">
+        <div className="absolute top-1/2 -translate-y-1/2 right-0 sm:right-4">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 type="submit"
                 size="icon"
+                variant="secondary"
                 disabled={isLoading || input === ""}
+                className="h-8 w-8"
               >
                 <CornerDownLeft />
                 <span className="sr-only">{t("sendMessage")}</span>

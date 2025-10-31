@@ -69,7 +69,7 @@ export default async function RootLayout({
           <HydrateClient>
             <ThemeProvider
               attribute="class"
-              defaultTheme="system"
+              defaultTheme="light"
               enableSystem
               disableTransitionOnChange
             >

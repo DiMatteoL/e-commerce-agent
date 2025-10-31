@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronsUpDown, LogIn, LogOut } from "lucide-react";
+import { ChevronsUpDown, LogIn, LogOut, User } from "lucide-react";
 import { useSession, signIn, signOut } from "next-auth/react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -44,23 +44,28 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 transition-colors"
               onClick={!user ? handleSignIn : undefined}
             >
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarFallback className="rounded-lg">
-                  {user?.name?.charAt(0)?.toUpperCase() ??
-                    user?.email?.charAt(0)?.toUpperCase() ??
-                    "?"}
+              <Avatar className="border-sidebar-border h-8 w-8 rounded-lg border-2">
+                <AvatarFallback className="bg-primary text-primary-foreground rounded-lg font-semibold">
+                  {user ? (
+                    (user.name?.charAt(0)?.toUpperCase() ??
+                    user.email?.charAt(0)?.toUpperCase())
+                  ) : (
+                    <User className="h-4 w-4" />
+                  )}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user?.name ?? ""}</span>
-                <span className="truncate text-xs">
+                <span className="truncate font-semibold">
+                  {user?.name ?? ""}
+                </span>
+                <span className="text-sidebar-foreground/60 truncate text-xs">
                   {user?.email ?? t("clickToLogin")}
                 </span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ChevronsUpDown className="ml-auto size-4 opacity-50" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -74,10 +79,9 @@ export function NavUser() {
                 <DropdownMenuLabel className="p-0 font-normal">
                   <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarFallback className="rounded-lg">
-                        {user?.name?.charAt(0)?.toUpperCase() ??
-                          user?.email?.charAt(0)?.toUpperCase() ??
-                          "?"}
+                      <AvatarFallback className="bg-primary text-primary-foreground rounded-lg font-semibold">
+                        {user.name?.charAt(0)?.toUpperCase() ??
+                          user.email?.charAt(0)?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
