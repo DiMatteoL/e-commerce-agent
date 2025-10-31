@@ -4,8 +4,6 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { Toaster } from "@/components/ui/sonner";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
-import { type Metadata } from "next";
-import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "@/trpc/react";
 import { ThemeProvider } from "@/app/_providers/theme-provider";
 import { HydrateClient } from "@/trpc/server";
@@ -17,31 +15,12 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { GoogleConnectionBanner } from "@/components/google-connection-banner";
 import { ClarityAnalytics } from "@/components/clarity-analytics";
+import { generateSiteMetadata } from "@/lib/metadata";
+import { geist } from "@/lib/fonts";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: "Hint AI",
-    description: "Hint AI is a tool that helps you optimize sales.",
-    icons: [{ rel: "icon", url: "/favicon.ico" }],
-    alternates: {
-      languages: {
-        ...routing.locales.reduce(
-          (acc, loc) => {
-            acc[loc] = `/${loc}`;
-            return acc;
-          },
-          {} as Record<string, string>,
-        ),
-        "x-default": `/${routing.defaultLocale}`,
-      },
-    },
-  };
+export async function generateMetadata() {
+  return generateSiteMetadata();
 }
-
-const geist = Geist({
-  subsets: ["latin"],
-  variable: "--font-geist-sans",
-});
 
 export default async function RootLayout({
   children,
